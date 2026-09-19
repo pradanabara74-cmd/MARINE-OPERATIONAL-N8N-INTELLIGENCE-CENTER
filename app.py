@@ -196,6 +196,13 @@ if page == "Command Center":
 elif page == "Marine Operations":
 
     st.header("⚓ Marine Operations Intelligence")
+    # ============================================================
+    # ACTIVE GLOBAL VESSEL
+    # ============================================================
+    if vessel_name:
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+    else:
+        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
     module = st.selectbox(
         "Select Module",
