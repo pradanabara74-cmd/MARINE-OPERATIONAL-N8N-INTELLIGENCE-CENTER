@@ -77,7 +77,93 @@ else:
     st.sidebar.caption("Enter any vessel name worldwide")
 
 st.sidebar.divider()
+# ============================================================
+# BBM / MGO RPM CONTROL - LITER
+# ============================================================
 
+with st.sidebar.expander("⛽ BBM/MGO RPM CONTROL", expanded=False):
+
+    st.caption("Main Engine Fuel Consumption (Liter)")
+
+    rpm_points = [600, 700, 800, 900, 1000, 1200, 1300]
+
+    bbm_me_kiri = {}
+    bbm_me_kanan = {}
+
+    for rpm in rpm_points:
+        st.markdown(f"**RPM {rpm}**")
+
+        left_col, right_col = st.columns(2)
+
+        with left_col:
+            bbm_me_kiri[rpm] = st.number_input(
+                "ME Kiri (L)",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key=f"bbm_me_kiri_{rpm}",
+            )
+
+        with right_col:
+            bbm_me_kanan[rpm] = st.number_input(
+                "ME Kanan (L)",
+                min_value=0.0,
+                value=0.0,
+                step=1.0,
+                key=f"bbm_me_kanan_{rpm}",
+            )
+
+    st.divider()
+
+    ae_24h_liter = st.number_input(
+        "AE 24 Jam - Pemakaian BBM (Liter)",
+        min_value=0.0,
+        value=0.0,
+        step=1.0,
+        key="ae_24h_liter",
+    )
+
+    total_me_kiri_liter = sum(bbm_me_kiri.values())
+    total_me_kanan_liter = sum(bbm_me_kanan.values())
+
+    total_me_liter = (
+        total_me_kiri_liter
+        + total_me_kanan_liter
+    )
+
+    total_bbm_liter = (
+        total_me_liter
+        + ae_24h_liter
+    )
+
+    st.divider()
+
+    st.metric(
+        "TOTAL ME KIRI",
+        f"{total_me_kiri_liter:,.2f} Liter"
+    )
+
+    st.metric(
+        "TOTAL ME KANAN",
+        f"{total_me_kanan_liter:,.2f} Liter"
+    )
+
+    st.metric(
+        "TOTAL MAIN ENGINE",
+        f"{total_me_liter:,.2f} Liter"
+    )
+
+    st.metric(
+        "AE 24 JAM",
+        f"{ae_24h_liter:,.2f} Liter"
+    )
+
+    st.metric(
+        "TOTAL BBM / MGO",
+        f"{total_bbm_liter:,.2f} Liter"
+    )
+
+st.sidebar.divider()
 
 page = st.sidebar.radio(
     "INTELLIGENCE MODULE",
