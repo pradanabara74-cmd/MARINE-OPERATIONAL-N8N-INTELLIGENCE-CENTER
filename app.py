@@ -229,6 +229,13 @@ elif page == "Marine Operations":
 elif page == "Fuel Efficiency BBM":
 
     st.header("⛽ Fuel Efficiency BBM Intelligence")
+    # ============================================================
+    # ACTIVE GLOBAL VESSEL
+    # ============================================================
+    if vessel_name:
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+    else:
+        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
     uploaded_file = st.file_uploader(
         "Upload DPR Vessel (CSV)",
