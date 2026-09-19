@@ -665,6 +665,103 @@ elif page == "Fuel Efficiency BBM":
         "READY" if engine_ready else "INPUT REQUIRED",
     )
     c3.metric("AI Analysis", "NEXT STAGE")
+    # ==========================================================
+    # FUEL PERFORMANCE INTELLIGENCE
+    # ==========================================================
+
+    st.divider()
+    st.subheader("📊 Fuel Performance Intelligence")
+
+    if engine_ready:
+        fp1, fp2, fp3 = st.columns(3)
+
+        engine_load_pct = fp1.number_input(
+            "Engine Load (%)",
+            min_value=0.0,
+            max_value=100.0,
+            value=75.0,
+            step=1.0,
+            key="fuel_engine_load",
+        )
+
+        running_hours = fp2.number_input(
+            "Running Hours",
+            min_value=0.0,
+            value=24.0,
+            step=1.0,
+            key="fuel_running_hours",
+        )
+
+        actual_fuel_mt = fp3.number_input(
+            "Actual Fuel Consumption (MT)",
+            min_value=0.0,
+            value=0.0,
+            step=0.1,
+            key="actual_fuel_mt",
+        )
+
+        calculated_power_kw = rated_power * (engine_load_pct / 100.0)
+
+        expected_fuel_kg = (
+            calculated_power_kw
+            * running_hours
+            * base_sfoc
+        )
+
+        expected_fuel_mt = expected_fuel_kg / 1_000_000
+
+        variance_mt = actual_fuel_mt - expected_fuel_mt
+
+        if expected_fuel_mt > 0:
+            variance_pct = (variance_mt / expected_fuel_mt) * 100
+        else:
+            variance_pct = 0.0
+
+        m1, m2, m3, m4 = st.columns(4)
+
+        m1.metric(
+            "Calculated Engine Power",
+            f"{calculated_power_kw:,.0f} kW",
+        )
+
+        m2.metric(
+            "Expected Fuel",
+            f"{expected_fuel_mt:,.2f} MT",
+        )
+
+        m3.metric(
+            "Actual Fuel",
+            f"{actual_fuel_mt:,.2f} MT",
+        )
+
+        m4.metric(
+            "Fuel Variance",
+            f"{variance_pct:+.1f}%",
+            delta=f"{variance_mt:+.2f} MT",
+            delta_color="inverse",
+        )
+
+        if actual_fuel_mt <= 0:
+            st.info("Enter actual fuel consumption to start performance analysis.")
+        elif variance_pct > 10:
+            st.error(
+                "🔴 HIGH FUEL CONSUMPTION — actual consumption is more than "
+                "10% above calculated baseline."
+            )
+        elif variance_pct > 5:
+            st.warning(
+                "🟠 FUEL PERFORMANCE WARNING — consumption is above calculated baseline."
+            )
+        else:
+            st.success(
+                "🟢 FUEL PERFORMANCE NORMAL — consumption is within calculated baseline."
+            )
+
+    else:
+        st.warning(
+            "Complete Engine Specification Database before running Fuel Performance Intelligence."
+        )
+
 
 # ============================================================
 # QHSSE
