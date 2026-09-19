@@ -1,5 +1,8 @@
 import streamlit as st
 from datetime import datetime
+import pandas as pd
+import io
+import csv
 
 # ============================================================
 # MARINE OPERATIONAL N8N INTELLIGENCE CENTER
@@ -340,34 +343,30 @@ elif page == "Fuel Efficiency BBM":
     )
 
     if uploaded_file is not None:
-        import io
-        import csv
-        import pandas as pd
-
         try:
-            raw_data = uploaded_file.getvalue()
+                raw_data = uploaded_file.getvalue()
 
-            # ----------------------------------------------------
-            # AUTO DETECT ENCODING
-            # ----------------------------------------------------
-            decoded_text = None
-            detected_encoding = None
+        # ----------------------------------------------
+        # AUTO DETECT ENCODING
+        # ----------------------------------------------
+        decoded_text = None
+        detected_encoding = None
 
-            for encoding in [
-                "utf-8-sig",
-                "utf-8",
-                "cp1252",
-                "latin1",
-            ]:
-                try:
-                    decoded_text = raw_data.decode(encoding)
-                    detected_encoding = encoding
-                    break
-                except UnicodeDecodeError:
-                    continue
+        for encoding in [
+            "utf-8-sig",
+            "utf-8",
+            "cp1252",
+            "latin1",
+        ]:
+            try:
+                decoded_text = raw_data.decode(encoding)
+                detected_encoding = encoding
+                break
+            except UnicodeDecodeError:
+                continue
 
-            if decoded_text is None:
-                raise ValueError("Encoding CSV tidak dapat dikenali.")
+        if decoded_text is None:
+            raise ValueError("Encoding CSV tidak dapat dikenali.")
 
             # ----------------------------------------------------
             # AUTO DETECT DELIMITER
