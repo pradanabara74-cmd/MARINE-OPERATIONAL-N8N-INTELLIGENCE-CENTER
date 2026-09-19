@@ -323,31 +323,208 @@ elif page == "Fuel Efficiency BBM":
     else:
         st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
+    # ============================================================
+    # UNIVERSAL DPR CSV READER - UNLIMITED COLUMNS
+    # ============================================================
+
+    st.subheader("📄 DPR Vessel Data")
+
     uploaded_file = st.file_uploader(
         "Upload DPR Vessel (CSV)",
         type=["csv"],
-        help="Sistem dirancang untuk menerima jumlah kolom DPR secara dinamis.",
+        key="universal_dpr_csv",
+        help=(
+            "Upload DPR kapal dalam format CSV. "
+            "Sistem menerima jumlah kolom secara dinamis."
+        ),
     )
 
     if uploaded_file is not None:
+        import io
+        import csv
         import pandas as pd
 
         try:
-            df = pd.read_csv(uploaded_file)
+            raw_data = uploaded_file.getvalue()
 
+            # ----------------------------------------------------
+            # AUTO DETECT ENCODING
+            # ----------------------------------------------------
+            decoded_text = None
+            detected_encoding = None
+
+            for encoding in [
+                "utf-8-sig",
+                "utf-8",
+                "cp1252",
+                "latin1",
+            ]:
+                try:
+                    decoded_text = raw_data.decode(encoding)
+                    detected_encoding = encoding
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+            if decoded_text is None:
+                raise ValueError("Encoding CSV tidak dapat dikenali.")
+
+            # ----------------------------------------------------
+            # AUTO DETECT DELIMITER
+            # comma / semicolon / tab / pipe
+            # ----------------------------------------------------
+            sample = decoded_text[:10000]
+
+            try:
+                dialect = csv.Sniffer().sniff(
+                    sample,
+                    delimiters=",;\t|",
+                )
+                detected_separator = dialect.delimiter
+            except csv.Error:
+                detected_separator = ","
+
+            # ----------------------------------------------------
+            # READ DPR - UNLIMITED / DYNAMIC COLUMNS
+            # ----------------------------------------------------
+            df = pd.read_csv(
+                io.StringIO(decoded_text),
+                sep=detected_separator,
+                engine="python",
+            )
+
+            # Bersihkan nama kolom
+            df.columns = [
+                str(column).strip()
+                for column in df.columns
+            ]
+
+            # Buang kolom yang benar-benar kosong / Unnamed
+            empty_columns = [
+                column
+                for column in df.columns
+                if str(column).lower().startswith("unnamed:")
+                and df[column].isna().all()
+            ]
+
+            if empty_columns:
+                df = df.drop(columns=empty_columns)
+
+            # ----------------------------------------------------
+            # STORE DPR FOR OTHER MODULES
+            # ----------------------------------------------------
+            st.session_state["dpr_dataframe"] = df
+            st.session_state["dpr_filename"] = uploaded_file.name
+            st.session_state["dpr_vessel"] = vessel_name
+
+            # ----------------------------------------------------
+            # DPR STATUS
+            # ----------------------------------------------------
             st.success(
-                f"DPR berhasil dibaca: "
+                f"✅ DPR BERHASIL DIBACA | "
                 f"{len(df):,} rows × {len(df.columns):,} columns"
             )
 
-            st.subheader("DPR Data Preview")
-            st.dataframe(df, use_container_width=True)
+            d1, d2, d3 = st.columns(3)
 
-            st.subheader("Detected DPR Columns")
-            st.write(list(df.columns))
+            d1.metric(
+                "DPR Rows",
+                f"{len(df):,}",
+            )
+
+            d2.metric(
+                "DPR Columns",
+                f"{len(df.columns):,}",
+            )
+
+            d3.metric(
+                "Active Vessel",
+                vessel_name if vessel_name else "Not Selected",
+            )
+
+            st.caption(
+                f"File: {uploaded_file.name} | "
+                f"Encoding: {detected_encoding} | "
+                f"Separator: {repr(detected_separator)}"
+            )
+
+            # ----------------------------------------------------
+            # DPR DATA PREVIEW
+            # ----------------------------------------------------
+            st.subheader("📊 DPR Data Preview")
+
+            st.dataframe(
+                df,
+                use_container_width=True,
+                height=400,
+            )
+
+            # ----------------------------------------------------
+            # DETECT ALL DPR COLUMNS
+            # ----------------------------------------------------
+            st.subheader("🔎 Detected DPR Columns")
+
+            st.write(
+                f"Total detected columns: {len(df.columns)}"
+            )
+
+            st.dataframe(
+                pd.DataFrame(
+                    {
+                        "No.": range(1, len(df.columns) + 1),
+                        "DPR Column": list(df.columns),
+                        "Data Type": [
+                            str(df[column].dtype)
+                            for column in df.columns
+                        ],
+                    }
+                ),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            # ----------------------------------------------------
+            # DATA QUALITY
+            # ----------------------------------------------------
+            total_cells = int(df.shape[0] * df.shape[1])
+            empty_cells = int(df.isna().sum().sum())
+
+            if total_cells > 0:
+                completeness = (
+                    (total_cells - empty_cells)
+                    / total_cells
+                    * 100
+                )
+            else:
+                completeness = 0.0
+
+            st.subheader("🧠 DPR Intelligence Status")
+
+            q1, q2, q3 = st.columns(3)
+
+            q1.metric(
+                "Data Completeness",
+                f"{completeness:.1f}%",
+            )
+
+            q2.metric(
+                "Empty Cells",
+                f"{empty_cells:,}",
+            )
+
+            q3.metric(
+                "Reader Status",
+                "READY",
+            )
+
+            st.success(
+                "🚢 DPR DATA READY FOR FUEL INTELLIGENCE"
+            )
 
         except Exception as error:
-            st.error(f"CSV tidak dapat dibaca: {error}")
+            st.error(
+                f"❌ DPR CSV tidak dapat dibaca: {error}"
+            )
 
     # ==========================================================
     # ENGINE SPECIFICATION DATABASE & AUTO-FILL
