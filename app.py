@@ -56,6 +56,29 @@ st.markdown(
 # -----------------------------
 st.sidebar.title("⚓ N8N INTELLIGENCE")
 
+
+# ============================================================
+# GLOBAL VESSEL CONTROL
+# Accept any vessel name worldwide
+# ============================================================
+
+st.sidebar.subheader("🌍 GLOBAL VESSEL CONTROL")
+
+vessel_name = st.sidebar.text_input(
+    "Vessel Name",
+    placeholder="Type any vessel name...",
+    key="global_vessel_name"
+)
+
+if vessel_name:
+    vessel_name = vessel_name.strip().upper()
+    st.sidebar.success(f"⚓ ACTIVE VESSEL: {vessel_name}")
+else:
+    st.sidebar.caption("Enter any vessel name worldwide")
+
+st.sidebar.divider()
+
+
 page = st.sidebar.radio(
     "INTELLIGENCE MODULE",
     [
