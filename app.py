@@ -80,93 +80,145 @@ else:
     st.sidebar.caption("Enter any vessel name worldwide")
 
 st.sidebar.divider()
-# ============================================================
-# BBM / MGO RPM CONTROL - LITER
-# ============================================================
+# ==========================================================
+# BBM / MGO RPM CONTROL
+# ONE ACTIVE RPM = ONE OPERATING CONDITION
+# ==========================================================
 
 with st.sidebar.expander("⛽ BBM/MGO RPM CONTROL", expanded=False):
 
-    st.caption("Main Engine Fuel Consumption (Liter)")
+    st.caption("Main Engine Fuel Consumption (Liter/Jam)")
 
     rpm_points = [600, 700, 800, 900, 1000, 1200, 1300]
 
-    bbm_me_kiri = {}
-    bbm_me_kanan = {}
+    # ------------------------------------------------------
+    # PILIH RPM YANG SEDANG DIGUNAKAN
+    # ------------------------------------------------------
 
-    for rpm in rpm_points:
-        st.markdown(f"**RPM {rpm}**")
-
-        left_col, right_col = st.columns(2)
-
-        with left_col:
-            bbm_me_kiri[rpm] = st.number_input(
-                "ME Kiri (L)",
-                min_value=0.0,
-                value=0.0,
-                step=1.0,
-                key=f"bbm_me_kiri_{rpm}",
-            )
-
-        with right_col:
-            bbm_me_kanan[rpm] = st.number_input(
-                "ME Kanan (L)",
-                min_value=0.0,
-                value=0.0,
-                step=1.0,
-                key=f"bbm_me_kanan_{rpm}",
-            )
-
-    st.divider()
-
-    ae_24h_liter = st.number_input(
-        "AE 24 Jam - Pemakaian BBM (Liter)",
-        min_value=0.0,
-        value=0.0,
-        step=1.0,
-        key="ae_24h_liter",
+    active_rpm = st.selectbox(
+        "RPM Aktif",
+        rpm_points,
+        index=0,
+        key="active_rpm",
     )
 
-    total_me_kiri_liter = sum(bbm_me_kiri.values())
-    total_me_kanan_liter = sum(bbm_me_kanan.values())
+    st.markdown(f"### RPM {active_rpm}")
+
+    left_col, right_col = st.columns(2)
+
+    # ------------------------------------------------------
+    # MAIN ENGINE KIRI
+    # ------------------------------------------------------
+
+    with left_col:
+        me_kiri_lph = st.number_input(
+            "ME Kiri (Liter/Jam)",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            key="active_me_kiri_lph",
+        )
+
+    # ------------------------------------------------------
+    # MAIN ENGINE KANAN
+    # ------------------------------------------------------
+
+    with right_col:
+        me_kanan_lph = st.number_input(
+            "ME Kanan (Liter/Jam)",
+            min_value=0.0,
+            value=0.0,
+            step=1.0,
+            key="active_me_kanan_lph",
+        )
+
+    # ------------------------------------------------------
+    # TOTAL MAIN ENGINE PER JAM
+    # RUMUS:
+    # ME KIRI + ME KANAN
+    # ------------------------------------------------------
+
+    total_me_kiri_liter = me_kiri_lph
+    total_me_kanan_liter = me_kanan_lph
 
     total_me_liter = (
         total_me_kiri_liter
         + total_me_kanan_liter
     )
 
-    total_bbm_liter = (
+    st.divider()
+
+    st.metric(
+        "TOTAL MAIN ENGINE / JAM",
+        f"{total_me_liter:,.2f} Liter/Jam",
+    )
+
+    # ------------------------------------------------------
+    # RUNNING HOURS MAIN ENGINE
+    # ------------------------------------------------------
+
+    me_running_hours = st.number_input(
+        "Main Engine Running Hours",
+        min_value=0.0,
+        max_value=24.0,
+        value=1.0,
+        step=0.5,
+        key="me_running_hours",
+    )
+
+    # Total aktual ME berdasarkan jam operasi
+    total_me_consumption = (
         total_me_liter
+        * me_running_hours
+    )
+
+    st.metric(
+        "TOTAL ME CONSUMPTION",
+        f"{total_me_consumption:,.2f} Liter",
+    )
+
+    st.divider()
+
+    # ======================================================
+    # AUXILIARY ENGINE
+    # ======================================================
+
+    st.caption("Auxiliary Engine Fuel Consumption")
+
+    ae_liter_per_hour = st.number_input(
+        "AE - Pemakaian BBM (Liter/Jam)",
+        min_value=0.0,
+        value=5.0,
+        step=0.1,
+        key="ae_liter_per_hour",
+    )
+
+    # AE bekerja 24 jam
+    ae_24h_liter = (
+        ae_liter_per_hour
+        * 24.0
+    )
+
+    st.metric(
+        "AE 24 JAM",
+        f"{ae_24h_liter:,.2f} Liter",
+    )
+
+    # ======================================================
+    # TOTAL FUEL CONSUMPTION
+    # ======================================================
+
+    total_bbm_liter = (
+        total_me_consumption
         + ae_24h_liter
     )
 
     st.divider()
 
     st.metric(
-        "TOTAL ME KIRI",
-        f"{total_me_kiri_liter:,.2f} Liter"
+        "TOTAL BBM / MGO CONSUMPTION",
+        f"{total_bbm_liter:,.2f} Liter",
     )
-
-    st.metric(
-        "TOTAL ME KANAN",
-        f"{total_me_kanan_liter:,.2f} Liter"
-    )
-
-    st.metric(
-        "TOTAL MAIN ENGINE",
-        f"{total_me_liter:,.2f} Liter"
-    )
-
-    st.metric(
-        "AE 24 JAM",
-        f"{ae_24h_liter:,.2f} Liter"
-    )
-
-    st.metric(
-        "TOTAL BBM / MGO",
-        f"{total_bbm_liter:,.2f} Liter"
-    )
-
-st.sidebar.divider()
 
 page = st.sidebar.radio(
     "INTELLIGENCE MODULE",
