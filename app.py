@@ -263,12 +263,144 @@ elif page == "Fuel Efficiency BBM":
         except Exception as error:
             st.error(f"CSV tidak dapat dibaca: {error}")
 
+    # ==========================================================
+    # ENGINE SPECIFICATION DATABASE & AUTO-FILL
+    # ==========================================================
+
+    st.divider()
+    st.subheader("⚙️ Engine Specification Database")
+
+    # Database dapat terus ditambah tanpa mengubah sistem utama
+    ENGINE_DATABASE = {
+        "Caterpillar": {
+            "3512C": {
+                "power_kw": 1902.0,
+                "rated_rpm": 1800.0,
+                "sfoc": 205.0,
+            },
+            "3516C": {
+                "power_kw": 2525.0,
+                "rated_rpm": 1800.0,
+                "sfoc": 205.0,
+            },
+        },
+        "Cummins": {
+            "KTA38-M2": {
+                "power_kw": 895.0,
+                "rated_rpm": 1800.0,
+                "sfoc": 210.0,
+            },
+            "KTA50-M2": {
+                "power_kw": 1193.0,
+                "rated_rpm": 1800.0,
+                "sfoc": 210.0,
+            },
+        },
+        "Yanmar": {
+            "6EY18ALW": {
+                "power_kw": 660.0,
+                "rated_rpm": 900.0,
+                "sfoc": 205.0,
+            },
+        },
+        "MAN": {
+            "D2862": {
+                "power_kw": 1324.0,
+                "rated_rpm": 2100.0,
+                "sfoc": 205.0,
+            },
+        },
+        "Custom / Other": {
+            "Manual Entry": {
+                "power_kw": 0.0,
+                "rated_rpm": 0.0,
+                "sfoc": 0.0,
+            },
+        },
+    }
+
+    engine_maker = st.selectbox(
+        "Engine Maker",
+        list(ENGINE_DATABASE.keys()),
+        key="fuel_engine_maker",
+    )
+
+    engine_models = list(ENGINE_DATABASE[engine_maker].keys())
+
+    engine_model = st.selectbox(
+        "Engine Model",
+        engine_models,
+        key="fuel_engine_model",
+    )
+
+    selected_engine = ENGINE_DATABASE[engine_maker][engine_model]
+
+    st.caption(
+        "Select an engine from the database or use "
+        "Custom / Other → Manual Entry."
+    )
+
+    e1, e2, e3 = st.columns(3)
+
+    with e1:
+        rated_power = st.number_input(
+            "Rated Power (kW)",
+            min_value=0.0,
+            value=float(selected_engine["power_kw"]),
+            step=1.0,
+            key=f"rated_power_{engine_maker}_{engine_model}",
+        )
+
+    with e2:
+        rated_rpm = st.number_input(
+            "Rated RPM",
+            min_value=0.0,
+            value=float(selected_engine["rated_rpm"]),
+            step=1.0,
+            key=f"rated_rpm_{engine_maker}_{engine_model}",
+        )
+
+    with e3:
+        base_sfoc = st.number_input(
+            "Base SFOC (g/kWh)",
+            min_value=0.0,
+            value=float(selected_engine["sfoc"]),
+            step=1.0,
+            key=f"base_sfoc_{engine_maker}_{engine_model}",
+        )
+
+    # Basic validation
+    engine_ready = (
+        rated_power > 0
+        and rated_rpm > 0
+        and base_sfoc > 0
+    )
+
+    if engine_ready:
+        st.success(
+            f"⚙️ ENGINE READY | {engine_maker} {engine_model} | "
+            f"{rated_power:,.0f} kW | {rated_rpm:,.0f} RPM | "
+            f"SFOC {base_sfoc:,.1f} g/kWh"
+        )
+    else:
+        st.info(
+            "Enter Rated Power, Rated RPM and Base SFOC "
+            "to activate the engine specification."
+        )
+
+    # ==========================================================
+    # SYSTEM STATUS
+    # ==========================================================
+
     st.divider()
 
     c1, c2, c3 = st.columns(3)
 
     c1.metric("Fuel Status", "READY")
-    c2.metric("Engine Database", "NEXT STAGE")
+    c2.metric(
+        "Engine Database",
+        "READY" if engine_ready else "INPUT REQUIRED",
+    )
     c3.metric("AI Analysis", "NEXT STAGE")
 
 # ============================================================
