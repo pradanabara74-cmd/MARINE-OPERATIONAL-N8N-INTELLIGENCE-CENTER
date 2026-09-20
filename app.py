@@ -788,13 +788,13 @@ elif module == "Certificates":
     # 6. BUNKER
     # ==========================================================
     elif module == "Bunker":
-    st.subheader("⛽ Bunker Intelligence")
+        st.subheader("⛽ Bunker Intelligence")
 
-    bunker_file = st.file_uploader(
-        "Upload Bunker CSV",
-        type=["csv"],
-        key="bunker_csv",
-    )
+        bunker_file = st.file_uploader(
+            "Upload Bunker CSV",
+            type=["csv"],
+            key="bunker_csv",
+        )
 
     if bunker_file is not None:
         try:
