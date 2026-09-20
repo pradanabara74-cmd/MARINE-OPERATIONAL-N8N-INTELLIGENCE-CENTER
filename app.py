@@ -784,40 +784,41 @@ elif module == "Certificates":
         else:
             st.info("Upload Certificates CSV to start analysis.")
 
-    # ==========================================================
-    # 6. BUNKER
-    # ==========================================================
-    elif module == "Bunker":
-        st.subheader("⛽ Bunker Intelligence")
+    # ============================================================
+        # 6. BUNKER
+        # ============================================================
+        elif module == "Bunker":
+            st.subheader("⛽ Bunker Intelligence")
 
-        bunker_file = st.file_uploader(
-            "Upload Bunker CSV",
-            type=["csv"],
-            key="bunker_csv",
-        )
-
-    if bunker_file is not None:
-        try:
-            bunker_df = pd.read_csv(bunker_file)
-
-            st.success(
-                f"✅ Bunker data loaded — {len(bunker_df)} records"
+            bunker_file = st.file_uploader(
+                "Upload Bunker CSV",
+                type=["csv"],
+                key="bunker_csv",
             )
 
-            st.dataframe(
-                bunker_df,
-                use_container_width=True,
-            )
+            if bunker_file is not None:
+                try:
+                    bunker_df = pd.read_csv(bunker_file)
 
-            st.metric(
-                "BUNKER RECORDS",
-                len(bunker_df),
-            )
+                    st.success(
+                        f"✅ Bunker data loaded - {len(bunker_df)} records"
+                    )
 
-        except Exception as e:
-            st.error(f"Unable to read Bunker CSV: {e}")
-    else:
-        st.info("Upload Bunker CSV to start analysis.")
+                    st.dataframe(
+                        bunker_df,
+                        use_container_width=True,
+                    )
+
+                    st.metric(
+                        "BUNKER RECORDS",
+                        len(bunker_df),
+                    )
+
+                except Exception as e:
+                    st.error(f"Unable to read Bunker CSV: {e}")
+
+            else:
+                st.info("Upload Bunker CSV to start analysis.")
 
     # ==========================================================
     # 7. CARGO
