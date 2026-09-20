@@ -880,10 +880,11 @@ elif module == "PMS / Maintenance":
             "Upload PMS CSV to start maintenance analysis."
         )
 
-    # ==========================================================
-    # 4. DEFECTS
-    # ==========================================================
-    elif module == "Defects":
+
+# ============================================================
+# 4. DEFECTS
+# ============================================================
+elif module == "Defects":
 
         st.subheader("⚠️ Defects Intelligence")
 
