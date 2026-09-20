@@ -912,6 +912,204 @@ elif page == "Marine Operations":
                             "Data Fields",
                             len(certificate_df.columns),
                         )
+                        # ==========================================
+                # CERTIFICATE INTELLIGENCE
+                # ==========================================
+
+                st.markdown("### 🔎 Data Gaps")
+
+                required_fields = [
+                    "Vessel",
+                    "Certificate",
+                    "Certificate No",
+                    "Issued By",
+                    "Issue Date",
+                    "Expiry Date",
+                ]
+
+                missing_fields = [
+                    field
+                    for field in required_fields
+                    if field not in certificate_df.columns
+                ]
+
+                if missing_fields:
+                    st.warning(
+                        "Missing certificate field(s): "
+                        + ", ".join(missing_fields)
+                    )
+                else:
+                    st.success("✅ Core certificate fields detected.")
+
+                empty_cells = int(
+                    certificate_df.isna().sum().sum()
+                )
+
+                if empty_cells > 0:
+                    st.warning(
+                        f"⚠️ {empty_cells} empty certificate data cell(s) detected."
+                    )
+                else:
+                    st.success("✅ No empty certificate data cells detected.")
+
+                # ==========================================
+                # CERTIFICATE EXPIRY RISK
+                # ==========================================
+
+                st.markdown("### ⚠️ Certificate Expiry Risk")
+
+                expiry_column = None
+
+                for col in certificate_df.columns:
+                    normalized_col = (
+                        str(col)
+                        .strip()
+                        .lower()
+                        .replace("_", " ")
+                    )
+
+                    if normalized_col in [
+                        "expiry date",
+                        "expiration date",
+                        "expire date",
+                        "valid until",
+                    ]:
+                        expiry_column = col
+                        break
+
+                if expiry_column is None:
+
+                    st.warning(
+                        "⚠️ Expiry Date column not detected."
+                    )
+
+                else:
+
+                    expiry_dates = pd.to_datetime(
+                        certificate_df[expiry_column],
+                        errors="coerce",
+                    )
+
+                    today = pd.Timestamp.today().normalize()
+
+                    days_remaining = (
+                        expiry_dates - today
+                    ).dt.days
+
+                    expired_count = int(
+                        (days_remaining < 0).sum()
+                    )
+
+                    expiring_soon_count = int(
+                        (
+                            (days_remaining >= 0)
+                            & (days_remaining <= 90)
+                        ).sum()
+                    )
+
+                    valid_count = int(
+                        (days_remaining > 90).sum()
+                    )
+
+                    r1, r2, r3 = st.columns(3)
+
+                    with r1:
+                        st.metric(
+                            "Expired",
+                            expired_count,
+                        )
+
+                    with r2:
+                        st.metric(
+                            "Expiring ≤ 90 Days",
+                            expiring_soon_count,
+                        )
+
+                    with r3:
+                        st.metric(
+                            "Valid > 90 Days",
+                            valid_count,
+                        )
+
+                    if expired_count > 0:
+                        st.error(
+                            f"🔴 {expired_count} expired certificate(s) detected."
+                        )
+
+                    if expiring_soon_count > 0:
+                        st.warning(
+                            f"🟠 {expiring_soon_count} certificate(s) "
+                            "expire within 90 days."
+                        )
+
+                    if (
+                        expired_count == 0
+                        and expiring_soon_count == 0
+                    ):
+                        st.success(
+                            "🟢 No immediate certificate expiry risk detected."
+                        )
+
+                    # ======================================
+                    # PRIORITY ACTIONS
+                    # ======================================
+
+                    st.markdown("### 🎯 Priority Actions")
+
+                    if expired_count > 0:
+                        st.error(
+                            "Immediately verify and renew expired "
+                            "certificate(s) before vessel operation "
+                            "where applicable."
+                        )
+
+                    if expiring_soon_count > 0:
+                        st.warning(
+                            "Start renewal process for certificates "
+                            "expiring within 90 days."
+                        )
+
+                    if (
+                        expired_count == 0
+                        and expiring_soon_count == 0
+                    ):
+                        st.success(
+                            "No urgent certificate renewal action required."
+                        )
+
+                    # ======================================
+                    # CERTIFICATE STATUS TABLE
+                    # ======================================
+
+                    intelligence_df = certificate_df.copy()
+
+                    intelligence_df["Days Remaining"] = (
+                        days_remaining
+                    )
+
+                    def certificate_status(days):
+                        if pd.isna(days):
+                            return "UNKNOWN"
+                        if days < 0:
+                            return "EXPIRED"
+                        if days <= 90:
+                            return "EXPIRING SOON"
+                        return "VALID"
+
+                    intelligence_df["Certificate Status"] = (
+                        intelligence_df[
+                            "Days Remaining"
+                        ].apply(certificate_status)
+                    )
+
+                    st.markdown(
+                        "### 📋 Certificate Intelligence Records"
+                    )
+
+                    st.dataframe(
+                        intelligence_df,
+                        use_container_width=True,
+                    )
 
             except pd.errors.EmptyDataError:
                 st.error(
