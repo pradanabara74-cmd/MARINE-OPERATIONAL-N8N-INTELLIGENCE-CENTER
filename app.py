@@ -507,7 +507,6 @@ elif page == "Marine Operations":
 # 3. PMS / MAINTENANCE INTELLIGENCE
 # ============================================================
 elif module == "PMS / Maintenance":
-
     st.subheader("🔧 PMS / Maintenance Intelligence")
 
     if vessel_name:
@@ -528,7 +527,7 @@ elif module == "PMS / Maintenance":
         try:
             pms_df = pd.read_csv(pms_file)
 
-            # Clean completely empty rows and columns
+            # Remove completely empty rows and columns
             pms_df = pms_df.dropna(how="all")
             pms_df = pms_df.dropna(axis=1, how="all")
 
@@ -542,172 +541,131 @@ elif module == "PMS / Maintenance":
                 st.warning("⚠️ PMS CSV contains no maintenance records.")
 
             else:
-                total_records = len(pms_df)
-
                 st.success(
-                    f"✅ PMS data loaded successfully — "
-                    f"{total_records} records"
+                    f"✅ PMS data loaded — {len(pms_df)} records"
                 )
 
                 st.markdown("### 📋 PMS Records")
-
                 st.dataframe(
                     pms_df,
                     use_container_width=True
                 )
 
-                # ------------------------------------------------
-                # COLUMN DETECTION
-                # ------------------------------------------------
+                st.metric(
+                    "PMS RECORDS",
+                    len(pms_df)
+                )
+
+                # --------------------------------------------
+                # FACTS
+                # --------------------------------------------
+                st.markdown("### 📊 Facts")
+
+                st.write(
+                    f"Total maintenance records: **{len(pms_df)}**"
+                )
+
+                st.write(
+                    f"Total data fields detected: **{len(pms_df.columns)}**"
+                )
+
+                # --------------------------------------------
+                # DATA GAPS
+                # --------------------------------------------
+                st.markdown("### 🔎 Data Gaps")
+
+                required_fields = [
+                    "vessel",
+                    "equipment",
+                    "maintenance",
+                    "due_date",
+                    "status"
+                ]
+
                 normalized_columns = {
-                    str(col).strip().lower(): col
+                    str(col).strip().lower().replace(" ", "_")
                     for col in pms_df.columns
                 }
 
-                equipment_col = None
-                due_col = None
-                status_col = None
-                priority_col = None
-
-                for normalized, original in normalized_columns.items():
-
-                    if equipment_col is None and any(
-                        word in normalized
-                        for word in [
-                            "equipment",
-                            "machinery",
-                            "machine",
-                            "component"
-                        ]
-                    ):
-                        equipment_col = original
-
-                    if due_col is None and any(
-                        word in normalized
-                        for word in [
-                            "due date",
-                            "due_date",
-                            "next due",
-                            "next_due"
-                        ]
-                    ):
-                        due_col = original
-
-                    if status_col is None and "status" in normalized:
-                        status_col = original
-
-                    if priority_col is None and any(
-                        word in normalized
-                        for word in [
-                            "priority",
-                            "risk",
-                            "criticality"
-                        ]
-                    ):
-                        priority_col = original
-
-                # ------------------------------------------------
-                # FACTS
-                # ------------------------------------------------
-                st.markdown("### 📊 Facts")
-
-                c1, c2, c3 = st.columns(3)
-
-                with c1:
-                    st.metric(
-                        "Total PMS Records",
-                        total_records
-                    )
-
-                with c2:
-                    st.metric(
-                        "Detected Columns",
-                        len(pms_df.columns)
-                    )
-
-                with c3:
-                    st.metric(
-                        "Active Vessel",
-                        vessel_name if vessel_name else "Not selected"
-                    )
-
-                # ------------------------------------------------
-                # DATA GAPS
-                # ------------------------------------------------
-                st.markdown("### 🔎 Data Gaps")
-
-                missing_fields = []
-
-                if equipment_col is None:
-                    missing_fields.append("Equipment / Machinery")
-
-                if due_col is None:
-                    missing_fields.append("Due Date")
-
-                if status_col is None:
-                    missing_fields.append("Status")
-
-                if priority_col is None:
-                    missing_fields.append("Priority / Risk")
+                missing_fields = [
+                    field
+                    for field in required_fields
+                    if field not in normalized_columns
+                ]
 
                 if missing_fields:
                     st.warning(
-                        "Recommended PMS fields not detected: "
+                        "Missing recommended PMS fields: "
                         + ", ".join(missing_fields)
                     )
                 else:
-                    st.success(
-                        "✅ Core PMS fields detected."
-                    )
+                    st.success("✅ Core PMS fields detected.")
 
-                # ------------------------------------------------
+                # --------------------------------------------
                 # MAINTENANCE RISK
-                # ------------------------------------------------
+                # --------------------------------------------
                 st.markdown("### ⚠️ Maintenance Risk")
 
                 risk_score = 0
 
-                if equipment_col is None:
-                    risk_score += 1
+                if missing_fields:
+                    risk_score += len(missing_fields)
 
-                if due_col is None:
-                    risk_score += 2
+                status_column = None
 
-                if status_col is None:
-                    risk_score += 1
+                for col in pms_df.columns:
+                    if str(col).strip().lower() == "status":
+                        status_column = col
+                        break
 
-                if priority_col is None:
-                    risk_score += 1
-
-                if risk_score >= 4:
-                    st.error(
-                        "🔴 Maintenance Risk: HIGH"
+                if status_column is not None:
+                    status_values = (
+                        pms_df[status_column]
+                        .astype(str)
+                        .str.lower()
                     )
 
-                elif risk_score >= 2:
-                    st.warning(
-                        "🟠 Maintenance Risk: MEDIUM"
-                    )
+                    overdue_count = status_values.str.contains(
+                        "overdue",
+                        na=False
+                    ).sum()
 
+                    if overdue_count > 0:
+                        risk_score += int(overdue_count)
+                        st.error(
+                            f"🔴 Overdue maintenance records: "
+                            f"{overdue_count}"
+                        )
                 else:
-                    st.success(
-                        "🟢 Maintenance Risk: LOW"
-                    )
+                    overdue_count = 0
 
-                # ------------------------------------------------
+                if risk_score >= 5:
+                    st.error("🔴 Maintenance Risk: HIGH")
+                elif risk_score >= 2:
+                    st.warning("🟠 Maintenance Risk: MEDIUM")
+                else:
+                    st.success("🟢 Maintenance Risk: LOW")
+
+                # --------------------------------------------
                 # PRIORITY ACTIONS
-                # ------------------------------------------------
+                # --------------------------------------------
                 st.markdown("### 🎯 Priority Actions")
 
                 if missing_fields:
                     st.warning(
-                        "Complete the missing PMS information: "
+                        "Complete missing PMS information: "
                         + ", ".join(missing_fields)
                     )
 
-                else:
+                if overdue_count > 0:
+                    st.error(
+                        "Review and close overdue maintenance "
+                        "items immediately."
+                    )
+
+                if not missing_fields and overdue_count == 0:
                     st.success(
-                        "✅ PMS core information is complete."
+                        "✅ No immediate PMS data action detected."
                     )
 
         except pd.errors.EmptyDataError:
