@@ -830,37 +830,36 @@ elif module == "Certificates":
     # 6. BUNKER
     # ==========================================================
     elif module == "Bunker":
+    st.subheader("⛽ Bunker Intelligence")
 
-        st.subheader("⛽ Bunker Intelligence")
+    bunker_file = st.file_uploader(
+        "Upload Bunker CSV",
+        type=["csv"],
+        key="bunker_csv",
+    )
 
-        bunker_file = st.file_uploader(
-            "Upload Bunker CSV",
-            type=["csv"],
-            key="bunker_csv",
-        )
+    if bunker_file is not None:
+        try:
+            bunker_df = pd.read_csv(bunker_file)
 
-        if bunker_file is not None:
-            try:
-                bunker_df = pd.read_csv(bunker_file)
+            st.success(
+                f"✅ Bunker data loaded — {len(bunker_df)} records"
+            )
 
-                st.success(
-                    f"✅ Bunker data loaded — {len(bunker_df)} records"
-                )
+            st.dataframe(
+                bunker_df,
+                use_container_width=True,
+            )
 
-                st.dataframe(
-                    bunker_df,
-                    use_container_width=True,
-                )
+            st.metric(
+                "BUNKER RECORDS",
+                len(bunker_df),
+            )
 
-                st.metric(
-                    "BUNKER RECORDS",
-                    len(bunker_df),
-                )
-
-            except Exception as e:
-                st.error(f"Unable to read Bunker CSV: {e}")
-        else:
-            st.info("Upload Bunker CSV to start analysis.")
+        except Exception as e:
+            st.error(f"Unable to read Bunker CSV: {e}")
+    else:
+        st.info("Upload Bunker CSV to start analysis.")
 
     # ==========================================================
     # 7. CARGO
