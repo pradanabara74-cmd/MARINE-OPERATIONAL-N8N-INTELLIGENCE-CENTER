@@ -1063,9 +1063,6 @@ elif module == "Bunker":
                 f"❌ Unable to read Bunker CSV: {e}"
             )
 
-            else:
-                st.info("Upload Bunker CSV to start analysis.")
-
     # ==========================================================
     # 7. CARGO
     # ==========================================================
