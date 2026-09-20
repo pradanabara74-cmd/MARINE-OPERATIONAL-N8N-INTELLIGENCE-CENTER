@@ -518,17 +518,17 @@ elif module == "PMS / Maintenance":
     pms_file = st.file_uploader(
         "Upload PMS / Maintenance CSV",
         type=["csv"],
-        key="pms_csv",
+        key="pms_csv"
     )
 
-    if pms_file is not None:
+    if pms_file is None:
+        st.info("Upload PMS CSV to start maintenance analysis.")
+
+    else:
         try:
-            # ------------------------------------------------
-            # READ CSV
-            # ------------------------------------------------
             pms_df = pd.read_csv(pms_file)
 
-            # Remove completely empty rows/columns
+            # Clean completely empty rows and columns
             pms_df = pms_df.dropna(how="all")
             pms_df = pms_df.dropna(axis=1, how="all")
 
@@ -538,347 +538,188 @@ elif module == "PMS / Maintenance":
                 for col in pms_df.columns
             ]
 
-            total_records = len(pms_df)
+            if pms_df.empty:
+                st.warning("⚠️ PMS CSV contains no maintenance records.")
 
-            st.success(
-                f"✅ PMS data loaded — {total_records} records"
-            )
+            else:
+                total_records = len(pms_df)
 
-            # ------------------------------------------------
-            # PMS RECORDS
-            # ------------------------------------------------
-            st.markdown("### 📋 PMS Records")
-
-            st.dataframe(
-                pms_df,
-                use_container_width=True,
-            )
-
-            # ------------------------------------------------
-            # FIND IMPORTANT COLUMNS AUTOMATICALLY
-            # ------------------------------------------------
-            def find_column(keywords):
-                for col in pms_df.columns:
-                    name = str(col).lower().strip()
-
-                    for keyword in keywords:
-                        if keyword in name:
-                            return col
-
-                return None
-
-            status_col = find_column(
-                [
-                    "status",
-                    "condition",
-                    "maintenance status",
-                    "job status",
-                ]
-            )
-
-            due_col = find_column(
-                [
-                    "due date",
-                    "next due",
-                    "due",
-                    "next maintenance",
-                    "maintenance date",
-                ]
-            )
-
-            priority_col = find_column(
-                [
-                    "priority",
-                    "criticality",
-                    "risk",
-                ]
-            )
-
-            equipment_col = find_column(
-                [
-                    "equipment",
-                    "machinery",
-                    "component",
-                    "job",
-                    "maintenance item",
-                ]
-            )
-
-            # ------------------------------------------------
-            # ANALYSIS DATA
-            # ------------------------------------------------
-            overdue_df = pd.DataFrame()
-            due_soon_df = pd.DataFrame()
-            high_priority_df = pd.DataFrame()
-
-            today = pd.Timestamp.today().normalize()
-
-            # ------------------------------------------------
-            # DUE DATE ANALYSIS
-            # ------------------------------------------------
-            if due_col is not None:
-
-                due_dates = pd.to_datetime(
-                    pms_df[due_col],
-                    errors="coerce",
+                st.success(
+                    f"✅ PMS data loaded successfully — "
+                    f"{total_records} records"
                 )
 
-                overdue_mask = due_dates < today
-
-                due_soon_mask = (
-                    (due_dates >= today)
-                    & (due_dates <= today + pd.Timedelta(days=30))
-                )
-
-                overdue_df = pms_df.loc[
-                    overdue_mask
-                ].copy()
-
-                due_soon_df = pms_df.loc[
-                    due_soon_mask
-                ].copy()
-
-            # ------------------------------------------------
-            # STATUS ANALYSIS
-            # ------------------------------------------------
-            if status_col is not None:
-
-                status_text = (
-                    pms_df[status_col]
-                    .astype(str)
-                    .str.lower()
-                    .str.strip()
-                )
-
-                status_overdue = status_text.str.contains(
-                    r"overdue|expired|late",
-                    regex=True,
-                    na=False,
-                )
-
-                status_due = status_text.str.contains(
-                    r"due soon|due|pending",
-                    regex=True,
-                    na=False,
-                )
-
-                if status_overdue.any():
-                    overdue_df = pd.concat(
-                        [
-                            overdue_df,
-                            pms_df.loc[status_overdue],
-                        ]
-                    ).drop_duplicates()
-
-                if status_due.any():
-                    due_soon_df = pd.concat(
-                        [
-                            due_soon_df,
-                            pms_df.loc[
-                                status_due & ~status_overdue
-                            ],
-                        ]
-                    ).drop_duplicates()
-
-            # ------------------------------------------------
-            # PRIORITY / RISK ANALYSIS
-            # ------------------------------------------------
-            if priority_col is not None:
-
-                priority_text = (
-                    pms_df[priority_col]
-                    .astype(str)
-                    .str.lower()
-                    .str.strip()
-                )
-
-                high_priority_mask = priority_text.str.contains(
-                    r"critical|high|urgent|emergency",
-                    regex=True,
-                    na=False,
-                )
-
-                high_priority_df = pms_df.loc[
-                    high_priority_mask
-                ].copy()
-
-            # ------------------------------------------------
-            # KPI
-            # ------------------------------------------------
-            st.markdown("### 📊 Maintenance Status")
-
-            k1, k2, k3, k4 = st.columns(4)
-
-            k1.metric(
-                "PMS Records",
-                total_records,
-            )
-
-            k2.metric(
-                "Overdue",
-                len(overdue_df),
-            )
-
-            k3.metric(
-                "Due Soon ≤30 Days",
-                len(due_soon_df),
-            )
-
-            k4.metric(
-                "High Priority",
-                len(high_priority_df),
-            )
-
-            # ------------------------------------------------
-            # OVERDUE MAINTENANCE
-            # ------------------------------------------------
-            st.markdown("### 🔴 Overdue Maintenance")
-
-            if not overdue_df.empty:
-                st.error(
-                    f"{len(overdue_df)} overdue maintenance item(s) detected."
-                )
+                st.markdown("### 📋 PMS Records")
 
                 st.dataframe(
-                    overdue_df,
-                    use_container_width=True,
+                    pms_df,
+                    use_container_width=True
                 )
 
-            else:
-                st.success(
-                    "No overdue maintenance detected."
-                )
+                # ------------------------------------------------
+                # COLUMN DETECTION
+                # ------------------------------------------------
+                normalized_columns = {
+                    str(col).strip().lower(): col
+                    for col in pms_df.columns
+                }
 
-            # ------------------------------------------------
-            # DUE SOON
-            # ------------------------------------------------
-            st.markdown("### 🟠 Due Soon")
+                equipment_col = None
+                due_col = None
+                status_col = None
+                priority_col = None
 
-            if not due_soon_df.empty:
-                st.warning(
-                    f"{len(due_soon_df)} maintenance item(s) require attention."
-                )
+                for normalized, original in normalized_columns.items():
 
-                st.dataframe(
-                    due_soon_df,
-                    use_container_width=True,
-                )
+                    if equipment_col is None and any(
+                        word in normalized
+                        for word in [
+                            "equipment",
+                            "machinery",
+                            "machine",
+                            "component"
+                        ]
+                    ):
+                        equipment_col = original
 
-            else:
-                st.success(
-                    "No maintenance due within the next 30 days."
-                )
+                    if due_col is None and any(
+                        word in normalized
+                        for word in [
+                            "due date",
+                            "due_date",
+                            "next due",
+                            "next_due"
+                        ]
+                    ):
+                        due_col = original
 
-            # ------------------------------------------------
-            # MAINTENANCE RISK
-            # ------------------------------------------------
-            st.markdown("### ⚠️ Maintenance Risk")
+                    if status_col is None and "status" in normalized:
+                        status_col = original
 
-            risk_score = (
-                len(overdue_df) * 3
-                + len(high_priority_df) * 2
-                + len(due_soon_df)
-            )
+                    if priority_col is None and any(
+                        word in normalized
+                        for word in [
+                            "priority",
+                            "risk",
+                            "criticality"
+                        ]
+                    ):
+                        priority_col = original
 
-            if risk_score >= 10:
-                risk_level = "HIGH"
-                st.error(
-                    f"🔴 Maintenance Risk: {risk_level}"
-                )
+                # ------------------------------------------------
+                # FACTS
+                # ------------------------------------------------
+                st.markdown("### 📊 Facts")
 
-            elif risk_score >= 4:
-                risk_level = "MEDIUM"
-                st.warning(
-                    f"🟠 Maintenance Risk: {risk_level}"
-                )
+                c1, c2, c3 = st.columns(3)
 
-            else:
-                risk_level = "LOW"
-                st.success(
-                    f"🟢 Maintenance Risk: {risk_level}"
-                )
+                with c1:
+                    st.metric(
+                        "Total PMS Records",
+                        total_records
+                    )
 
-            # ------------------------------------------------
-            # PRIORITY ACTIONS
-            # ------------------------------------------------
-            st.markdown("### 🎯 Priority Actions")
+                with c2:
+                    st.metric(
+                        "Detected Columns",
+                        len(pms_df.columns)
+                    )
 
-            action_number = 1
+                with c3:
+                    st.metric(
+                        "Active Vessel",
+                        vessel_name if vessel_name else "Not selected"
+                    )
 
-            if not overdue_df.empty:
-                st.error(
-                    f"{action_number}. Complete or review "
-                    f"{len(overdue_df)} overdue maintenance item(s)."
-                )
-                action_number += 1
+                # ------------------------------------------------
+                # DATA GAPS
+                # ------------------------------------------------
+                st.markdown("### 🔎 Data Gaps")
 
-            if not high_priority_df.empty:
-                st.warning(
-                    f"{action_number}. Review "
-                    f"{len(high_priority_df)} high-priority/critical item(s)."
-                )
-                action_number += 1
+                missing_fields = []
 
-            if not due_soon_df.empty:
-                st.info(
-                    f"{action_number}. Plan "
-                    f"{len(due_soon_df)} maintenance item(s) "
-                    "due within 30 days."
-                )
-                action_number += 1
+                if equipment_col is None:
+                    missing_fields.append("Equipment / Machinery")
 
-            if (
-                overdue_df.empty
-                and high_priority_df.empty
-                and due_soon_df.empty
-            ):
-                st.success(
-                    "✅ No immediate maintenance action identified."
-                )
+                if due_col is None:
+                    missing_fields.append("Due Date")
 
-            # ------------------------------------------------
-            # DATA GAPS
-            # ------------------------------------------------
-            st.markdown("### 🔎 Data Gaps")
+                if status_col is None:
+                    missing_fields.append("Status")
 
-            missing_columns = []
+                if priority_col is None:
+                    missing_fields.append("Priority / Risk")
 
-            if equipment_col is None:
-                missing_columns.append("Equipment / Machinery")
+                if missing_fields:
+                    st.warning(
+                        "Recommended PMS fields not detected: "
+                        + ", ".join(missing_fields)
+                    )
+                else:
+                    st.success(
+                        "✅ Core PMS fields detected."
+                    )
 
-            if due_col is None:
-                missing_columns.append("Due Date")
+                # ------------------------------------------------
+                # MAINTENANCE RISK
+                # ------------------------------------------------
+                st.markdown("### ⚠️ Maintenance Risk")
 
-            if status_col is None:
-                missing_columns.append("Status")
+                risk_score = 0
 
-            if priority_col is None:
-                missing_columns.append("Priority / Risk")
+                if equipment_col is None:
+                    risk_score += 1
 
-            if missing_columns:
-                st.warning(
-                    "Recommended PMS fields not detected: "
-                    + ", ".join(missing_columns)
-                )
-            else:
-                st.success(
-                    "Core PMS fields detected."
-                )
+                if due_col is None:
+                    risk_score += 2
+
+                if status_col is None:
+                    risk_score += 1
+
+                if priority_col is None:
+                    risk_score += 1
+
+                if risk_score >= 4:
+                    st.error(
+                        "🔴 Maintenance Risk: HIGH"
+                    )
+
+                elif risk_score >= 2:
+                    st.warning(
+                        "🟠 Maintenance Risk: MEDIUM"
+                    )
+
+                else:
+                    st.success(
+                        "🟢 Maintenance Risk: LOW"
+                    )
+
+                # ------------------------------------------------
+                # PRIORITY ACTIONS
+                # ------------------------------------------------
+                st.markdown("### 🎯 Priority Actions")
+
+                if missing_fields:
+                    st.warning(
+                        "Complete the missing PMS information: "
+                        + ", ".join(missing_fields)
+                    )
+
+                else:
+                    st.success(
+                        "✅ PMS core information is complete."
+                    )
 
         except pd.errors.EmptyDataError:
             st.error(
-                "❌ PMS CSV is empty. Please upload a CSV containing PMS records."
+                "❌ PMS CSV is empty. "
+                "Please upload a CSV containing PMS records."
             )
 
         except Exception as e:
             st.error(
                 f"❌ Unable to read/analyze PMS CSV: {e}"
             )
-
-    else:
-        st.info(
-            "Upload PMS CSV to start maintenance analysis."
-        )
 
 
 # ============================================================
