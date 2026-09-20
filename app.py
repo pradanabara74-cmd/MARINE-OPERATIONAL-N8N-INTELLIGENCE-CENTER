@@ -927,11 +927,18 @@ elif page == "Marine Operations":
                     "Expiry Date",
                 ]
 
-                missing_fields = [
-                    field
-                    for field in required_fields
-                    if field not in certificate_df.columns
-                ]
+                # Normalize certificate column names for reliable matching
+        normalized_columns = {
+            str(col).strip().lower().replace(".", "").replace(" ", "_").replace("-", "_")
+            for col in certificate_df.columns
+        }
+
+        missing_fields = [
+            field
+            for field in required_fields
+            if str(field).strip().lower().replace(".", "").replace(" ", "_").replace("-", "_")
+            not in normalized_columns
+        ]
 
                 if missing_fields:
                     st.warning(
