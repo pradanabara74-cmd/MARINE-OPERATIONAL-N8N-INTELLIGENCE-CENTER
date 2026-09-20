@@ -393,16 +393,17 @@ if page == "Command Center":
 elif page == "Marine Operations":
 
     st.header("⚓ Marine Operations Intelligence")
-    # ============================================================
+
+    # ==========================================================
     # ACTIVE GLOBAL VESSEL
-    # ============================================================
+    # ==========================================================
     if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name.upper()}")
     else:
         st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
     module = st.selectbox(
-        "Select Module",
+        "Select Marine Operations Module",
         [
             "Vessel Operations",
             "Voyage Intelligence",
@@ -415,9 +416,384 @@ elif page == "Marine Operations":
             "Action Tracker",
             "Marine AI Co-Pilot",
         ],
+        key="marine_operations_module",
     )
 
-    st.success(f"{module} module ready for integration.")
+    st.divider()
+
+    # ==========================================================
+    # 1. VESSEL OPERATIONS
+    # ==========================================================
+    if module == "Vessel Operations":
+
+        st.subheader("🚢 Vessel Operations")
+
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            operation_status = st.selectbox(
+                "Operation Status",
+                [
+                    "Underway",
+                    "At Anchor",
+                    "In Port",
+                    "Standby",
+                    "Towing",
+                    "Maneuvering",
+                    "Off Hire",
+                ],
+                key="vessel_operation_status",
+            )
+
+        with c2:
+            speed_knots = st.number_input(
+                "Speed (Knots)",
+                min_value=0.0,
+                value=0.0,
+                step=0.1,
+                key="vessel_speed_knots",
+            )
+
+        with c3:
+            engine_hours = st.number_input(
+                "Main Engine Running Hours",
+                min_value=0.0,
+                value=0.0,
+                step=0.1,
+                key="vessel_engine_hours",
+            )
+
+        st.metric("CURRENT OPERATION", operation_status)
+        st.metric("CURRENT SPEED", f"{speed_knots:.1f} Knots")
+        st.metric("ME RUNNING HOURS", f"{engine_hours:.1f} Hours")
+
+    # ==========================================================
+    # 2. VOYAGE INTELLIGENCE
+    # ==========================================================
+    elif module == "Voyage Intelligence":
+
+        st.subheader("🧭 Voyage Intelligence")
+
+        voyage_file = st.file_uploader(
+            "Upload Voyage CSV",
+            type=["csv"],
+            key="voyage_csv",
+        )
+
+        if voyage_file is not None:
+            try:
+                voyage_df = pd.read_csv(voyage_file)
+
+                st.success(
+                    f"✅ Voyage data loaded — {len(voyage_df)} records"
+                )
+
+                st.dataframe(
+                    voyage_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "VOYAGE RECORDS",
+                    len(voyage_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Voyage CSV: {e}")
+        else:
+            st.info("Upload Voyage CSV to start analysis.")
+
+    # ==========================================================
+    # 3. PMS / MAINTENANCE
+    # ==========================================================
+    elif module == "PMS / Maintenance":
+
+        st.subheader("🔧 PMS / Maintenance Intelligence")
+
+        pms_file = st.file_uploader(
+            "Upload PMS / Maintenance CSV",
+            type=["csv"],
+            key="pms_csv",
+        )
+
+        if pms_file is not None:
+            try:
+                pms_df = pd.read_csv(pms_file)
+
+                st.success(
+                    f"✅ PMS data loaded — {len(pms_df)} records"
+                )
+
+                st.dataframe(
+                    pms_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "MAINTENANCE RECORDS",
+                    len(pms_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read PMS CSV: {e}")
+        else:
+            st.info("Upload PMS CSV to start maintenance analysis.")
+
+    # ==========================================================
+    # 4. DEFECTS
+    # ==========================================================
+    elif module == "Defects":
+
+        st.subheader("⚠️ Defects Intelligence")
+
+        defect_file = st.file_uploader(
+            "Upload Defects CSV",
+            type=["csv"],
+            key="defects_csv",
+        )
+
+        if defect_file is not None:
+            try:
+                defect_df = pd.read_csv(defect_file)
+
+                st.success(
+                    f"✅ Defect data loaded — {len(defect_df)} records"
+                )
+
+                st.dataframe(
+                    defect_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "DEFECT RECORDS",
+                    len(defect_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Defects CSV: {e}")
+        else:
+            st.info("Upload Defects CSV to start analysis.")
+
+    # ==========================================================
+    # 5. CERTIFICATES
+    # ==========================================================
+    elif module == "Certificates":
+
+        st.subheader("📜 Certificates Intelligence")
+
+        certificate_file = st.file_uploader(
+            "Upload Certificates CSV",
+            type=["csv"],
+            key="certificates_csv",
+        )
+
+        if certificate_file is not None:
+            try:
+                certificate_df = pd.read_csv(certificate_file)
+
+                st.success(
+                    f"✅ Certificate data loaded — "
+                    f"{len(certificate_df)} records"
+                )
+
+                st.dataframe(
+                    certificate_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "CERTIFICATE RECORDS",
+                    len(certificate_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Certificates CSV: {e}")
+        else:
+            st.info("Upload Certificates CSV to start analysis.")
+
+    # ==========================================================
+    # 6. BUNKER
+    # ==========================================================
+    elif module == "Bunker":
+
+        st.subheader("⛽ Bunker Intelligence")
+
+        bunker_file = st.file_uploader(
+            "Upload Bunker CSV",
+            type=["csv"],
+            key="bunker_csv",
+        )
+
+        if bunker_file is not None:
+            try:
+                bunker_df = pd.read_csv(bunker_file)
+
+                st.success(
+                    f"✅ Bunker data loaded — {len(bunker_df)} records"
+                )
+
+                st.dataframe(
+                    bunker_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "BUNKER RECORDS",
+                    len(bunker_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Bunker CSV: {e}")
+        else:
+            st.info("Upload Bunker CSV to start analysis.")
+
+    # ==========================================================
+    # 7. CARGO
+    # ==========================================================
+    elif module == "Cargo":
+
+        st.subheader("📦 Cargo Intelligence")
+
+        cargo_file = st.file_uploader(
+            "Upload Cargo CSV",
+            type=["csv"],
+            key="cargo_csv",
+        )
+
+        if cargo_file is not None:
+            try:
+                cargo_df = pd.read_csv(cargo_file)
+
+                st.success(
+                    f"✅ Cargo data loaded — {len(cargo_df)} records"
+                )
+
+                st.dataframe(
+                    cargo_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "CARGO RECORDS",
+                    len(cargo_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Cargo CSV: {e}")
+        else:
+            st.info("Upload Cargo CSV to start analysis.")
+
+    # ==========================================================
+    # 8. AUDIT & FINDINGS
+    # ==========================================================
+    elif module == "Audit & Findings":
+
+        st.subheader("🔎 Audit & Findings")
+
+        audit_file = st.file_uploader(
+            "Upload Audit & Findings CSV",
+            type=["csv"],
+            key="audit_csv",
+        )
+
+        if audit_file is not None:
+            try:
+                audit_df = pd.read_csv(audit_file)
+
+                st.success(
+                    f"✅ Audit data loaded — {len(audit_df)} records"
+                )
+
+                st.dataframe(
+                    audit_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "AUDIT / FINDING RECORDS",
+                    len(audit_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Audit CSV: {e}")
+        else:
+            st.info("Upload Audit CSV to start analysis.")
+
+    # ==========================================================
+    # 9. ACTION TRACKER
+    # ==========================================================
+    elif module == "Action Tracker":
+
+        st.subheader("✅ Action Tracker")
+
+        action_file = st.file_uploader(
+            "Upload Action Tracker CSV",
+            type=["csv"],
+            key="action_tracker_csv",
+        )
+
+        if action_file is not None:
+            try:
+                action_df = pd.read_csv(action_file)
+
+                st.success(
+                    f"✅ Action Tracker loaded — {len(action_df)} records"
+                )
+
+                st.dataframe(
+                    action_df,
+                    use_container_width=True,
+                )
+
+                st.metric(
+                    "ACTION RECORDS",
+                    len(action_df),
+                )
+
+            except Exception as e:
+                st.error(f"Unable to read Action Tracker CSV: {e}")
+        else:
+            st.info("Upload Action Tracker CSV to start tracking.")
+
+    # ==========================================================
+    # 10. MARINE AI CO-PILOT
+    # ==========================================================
+    elif module == "Marine AI Co-Pilot":
+
+        st.subheader("🤖 Marine AI Co-Pilot")
+
+        if vessel_name:
+            st.success(
+                f"AI operational workspace ready for "
+                f"{vessel_name.upper()}."
+            )
+        else:
+            st.info(
+                "Enter Vessel Name in GLOBAL VESSEL CONTROL "
+                "before starting vessel-specific analysis."
+            )
+
+        marine_question = st.text_area(
+            "Marine Operations Question / Instruction",
+            placeholder=(
+                "Example: Analyze voyage, maintenance, defects, "
+                "certificates, bunker or cargo condition..."
+            ),
+            key="marine_ai_question",
+        )
+
+        if st.button(
+            "⚓ Analyze Marine Operations",
+            key="marine_ai_analyze",
+        ):
+            if marine_question.strip():
+                st.info(
+                    "Marine AI request received. "
+                    "AI engine connection will process this workspace."
+                )
+            else:
+                st.warning("Enter a question or instruction first.")
 
 # ============================================================
 # FUEL EFFICIENCY
