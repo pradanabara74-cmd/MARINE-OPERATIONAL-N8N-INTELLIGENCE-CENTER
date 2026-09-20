@@ -1307,11 +1307,13 @@ if uploaded_file is not None:
 
         calculated_power_kw = rated_power * (engine_load_pct / 100.0)
 
-        expected_fuel_kg = (
-            calculated_power_kw
-            * running_hours
-            * base_sfoc
-        )
+# DPR Dynamic CSV + Fuel Intelligence calculation verified
+
+expected_fuel_kg = (
+    calculated_power_kw
+    * running_hours
+    * base_sfoc
+)
 
         expected_fuel_mt = expected_fuel_kg / 1_000_000
 
