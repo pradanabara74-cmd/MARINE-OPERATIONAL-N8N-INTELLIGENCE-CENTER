@@ -848,14 +848,12 @@ elif module == "Certificates":
     certificate_file = st.file_uploader(
         "Upload Certificates CSV",
         type=["csv"],
-        key="certificate_csv_complete",
+        key="certificate_csv_complete_v2",
     )
 
     if certificate_file is None:
 
-        st.info(
-            "Upload Certificates CSV to start analysis."
-        )
+        st.info("Upload Certificates CSV to start analysis.")
 
     else:
 
@@ -865,24 +863,23 @@ elif module == "Certificates":
             # ------------------------------------------------
             certificate_df = pd.read_csv(certificate_file)
 
-            # Remove completely empty rows and columns
             certificate_df = certificate_df.dropna(
-                how="all"
+                axis=0,
+                how="all",
             )
 
             certificate_df = certificate_df.dropna(
                 axis=1,
-                how="all"
+                how="all",
             )
 
-            # Clean column names
             certificate_df.columns = [
                 str(col).strip()
                 for col in certificate_df.columns
             ]
 
             # ------------------------------------------------
-            # CHECK DATA
+            # CHECK EMPTY DATA
             # ------------------------------------------------
             if certificate_df.empty:
 
@@ -907,27 +904,32 @@ elif module == "Certificates":
                     use_container_width=True,
                 )
 
+                st.metric(
+                    "CERTIFICATE RECORDS",
+                    len(certificate_df),
+                )
+
                 # ============================================
                 # CERTIFICATE FACTS
                 # ============================================
                 st.markdown("### 📊 Certificate Facts")
 
-                c1, c2 = st.columns(2)
+                fact1, fact2 = st.columns(2)
 
-                with c1:
+                with fact1:
                     st.metric(
                         "Certificates",
                         len(certificate_df),
                     )
 
-                with c2:
+                with fact2:
                     st.metric(
                         "Data Fields",
                         len(certificate_df.columns),
                     )
 
                 # ============================================
-                # NORMALIZED COLUMN MAP
+                # NORMALIZE COLUMN NAMES
                 # ============================================
                 def normalize_certificate_column(value):
                     return (
@@ -935,9 +937,8 @@ elif module == "Certificates":
                         .strip()
                         .lower()
                         .replace(".", "")
-                        .replace("/", "_")
-                        .replace("-", "_")
-                        .replace(" ", "_")
+                        .replace("_", " ")
+                        .replace("-", " ")
                     )
 
                 normalized_columns = {
@@ -950,26 +951,30 @@ elif module == "Certificates":
                 # ============================================
                 st.markdown("### 🔎 Data Gaps")
 
-                required_fields = {
-                    "vessel": "Vessel",
-                    "certificate": "Certificate",
-                    "certificate_no": "Certificate No",
-                    "issued_by": "Issued By",
-                    "issue_date": "Issue Date",
-                    "expiry_date": "Expiry Date",
-                }
-
-                missing_fields = [
-                    display_name
-                    for normalized_name, display_name
-                    in required_fields.items()
-                    if normalized_name not in normalized_columns
+                required_fields = [
+                    "Vessel",
+                    "Certificate",
+                    "Certificate No",
+                    "Issued By",
+                    "Issue Date",
+                    "Expiry Date",
                 ]
+
+                missing_fields = []
+
+                for field in required_fields:
+
+                    normalized_field = (
+                        normalize_certificate_column(field)
+                    )
+
+                    if normalized_field not in normalized_columns:
+                        missing_fields.append(field)
 
                 if missing_fields:
 
                     st.warning(
-                        "⚠️ Missing recommended certificate field(s): "
+                        "⚠️ Missing certificate field(s): "
                         + ", ".join(missing_fields)
                     )
 
@@ -999,19 +1004,23 @@ elif module == "Certificates":
                 # ============================================
                 # FIND EXPIRY DATE COLUMN
                 # ============================================
-                expiry_aliases = [
-                    "expiry_date",
-                    "expiration_date",
-                    "expire_date",
-                    "valid_until",
-                    "valid_to",
-                ]
-
                 expiry_column = None
 
-                for alias in expiry_aliases:
-                    if alias in normalized_columns:
-                        expiry_column = normalized_columns[alias]
+                expiry_aliases = [
+                    "expiry date",
+                    "expiration date",
+                    "expire date",
+                    "valid until",
+                    "validity date",
+                    "expiry",
+                ]
+
+                for normalized_name, original_name in (
+                    normalized_columns.items()
+                ):
+
+                    if normalized_name in expiry_aliases:
+                        expiry_column = original_name
                         break
 
                 # ============================================
@@ -1026,7 +1035,8 @@ elif module == "Certificates":
                     )
 
                     st.info(
-                        "Recommended column name: Expiry Date"
+                        "Use an Expiry Date column to activate "
+                        "certificate expiry monitoring."
                     )
 
                 else:
@@ -1046,16 +1056,9 @@ elif module == "Certificates":
                         (days_remaining < 0).sum()
                     )
 
-                    expiring_30_count = int(
+                    expiring_soon_count = int(
                         (
                             (days_remaining >= 0)
-                            & (days_remaining <= 30)
-                        ).sum()
-                    )
-
-                    expiring_90_count = int(
-                        (
-                            (days_remaining > 30)
                             & (days_remaining <= 90)
                         ).sum()
                     )
@@ -1068,30 +1071,30 @@ elif module == "Certificates":
                         days_remaining.isna().sum()
                     )
 
-                    r1, r2, r3, r4 = st.columns(4)
+                    risk1, risk2, risk3, risk4 = st.columns(4)
 
-                    with r1:
+                    with risk1:
                         st.metric(
                             "Expired",
                             expired_count,
                         )
 
-                    with r2:
+                    with risk2:
                         st.metric(
-                            "≤ 30 Days",
-                            expiring_30_count,
+                            "Expiring ≤ 90 Days",
+                            expiring_soon_count,
                         )
 
-                    with r3:
-                        st.metric(
-                            "31–90 Days",
-                            expiring_90_count,
-                        )
-
-                    with r4:
+                    with risk3:
                         st.metric(
                             "Valid > 90 Days",
                             valid_count,
+                        )
+
+                    with risk4:
+                        st.metric(
+                            "Unknown Date",
+                            unknown_count,
                         )
 
                     if expired_count > 0:
@@ -1101,18 +1104,11 @@ elif module == "Certificates":
                             "certificate(s) detected."
                         )
 
-                    if expiring_30_count > 0:
-
-                        st.error(
-                            f"🔴 {expiring_30_count} certificate(s) "
-                            "expire within 30 days."
-                        )
-
-                    if expiring_90_count > 0:
+                    if expiring_soon_count > 0:
 
                         st.warning(
-                            f"🟠 {expiring_90_count} certificate(s) "
-                            "expire within 31–90 days."
+                            f"🟠 {expiring_soon_count} certificate(s) "
+                            "expire within 90 days."
                         )
 
                     if unknown_count > 0:
@@ -1124,14 +1120,13 @@ elif module == "Certificates":
 
                     if (
                         expired_count == 0
-                        and expiring_30_count == 0
-                        and expiring_90_count == 0
+                        and expiring_soon_count == 0
                         and unknown_count == 0
                     ):
 
                         st.success(
-                            "🟢 No immediate certificate "
-                            "expiry risk detected."
+                            "🟢 No immediate certificate expiry "
+                            "risk detected."
                         )
 
                     # ========================================
@@ -1139,50 +1134,42 @@ elif module == "Certificates":
                     # ========================================
                     st.markdown("### 🎯 Priority Actions")
 
-                    actions_found = False
+                    action_required = False
 
                     if expired_count > 0:
 
-                        actions_found = True
+                        action_required = True
 
                         st.error(
                             "Immediately verify and renew expired "
-                            "certificate(s) before vessel operation "
-                            "where applicable."
+                            "certificate(s), subject to applicable "
+                            "statutory, class, flag and operational "
+                            "requirements."
                         )
 
-                    if expiring_30_count > 0:
+                    if expiring_soon_count > 0:
 
-                        actions_found = True
-
-                        st.error(
-                            "Urgent renewal action required for "
-                            "certificate(s) expiring within 30 days."
-                        )
-
-                    if expiring_90_count > 0:
-
-                        actions_found = True
+                        action_required = True
 
                         st.warning(
-                            "Start renewal process for certificate(s) "
-                            "expiring within 31–90 days."
+                            "Start renewal planning for certificates "
+                            "expiring within 90 days."
                         )
 
                     if unknown_count > 0:
 
-                        actions_found = True
+                        action_required = True
 
                         st.warning(
                             "Verify missing or invalid certificate "
                             "expiry dates."
                         )
 
-                    if not actions_found:
+                    if not action_required:
 
                         st.success(
-                            "✅ No urgent certificate renewal "
-                            "action required."
+                            "No urgent certificate renewal action "
+                            "identified from the uploaded data."
                         )
 
                     # ========================================
@@ -1202,11 +1189,8 @@ elif module == "Certificates":
                         if days < 0:
                             return "EXPIRED"
 
-                        if days <= 30:
-                            return "URGENT ≤30 DAYS"
-
                         if days <= 90:
-                            return "EXPIRING ≤90 DAYS"
+                            return "EXPIRING SOON"
 
                         return "VALID"
 
@@ -1225,6 +1209,42 @@ elif module == "Certificates":
                         use_container_width=True,
                     )
 
+                    # ========================================
+                    # ATTENTION REQUIRED
+                    # ========================================
+                    attention_df = intelligence_df[
+                        intelligence_df[
+                            "Certificate Status"
+                        ].isin(
+                            [
+                                "EXPIRED",
+                                "EXPIRING SOON",
+                                "UNKNOWN",
+                            ]
+                        )
+                    ]
+
+                    st.markdown("### 🚨 Attention Required")
+
+                    if attention_df.empty:
+
+                        st.success(
+                            "No certificate records currently "
+                            "require attention."
+                        )
+
+                    else:
+
+                        st.dataframe(
+                            attention_df,
+                            use_container_width=True,
+                        )
+
+                        st.warning(
+                            f"{len(attention_df)} certificate "
+                            "record(s) require attention."
+                        )
+
         except pd.errors.EmptyDataError:
 
             st.error(
@@ -1237,6 +1257,13 @@ elif module == "Certificates":
 
             st.error(
                 f"❌ Certificates CSV format error: {e}"
+            )
+
+        except UnicodeDecodeError:
+
+            st.error(
+                "❌ Unable to decode the CSV file. "
+                "Please save the file as UTF-8 CSV and upload again."
             )
 
         except Exception as e:
