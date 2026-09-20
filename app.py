@@ -20,37 +20,7 @@ st.set_page_config(
 # STYLE
 # -----------------------------
 st.markdown(
-    """
-    <style>
-    .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
-    }
-
-    .main-title {
-        font-size: 2.2rem;
-        font-weight: 800;
-        margin-bottom: 0;
-    }
-
-    .sub-title {
-        font-size: 1rem;
-        opacity: 0.75;
-        margin-bottom: 1.5rem;
-    }
-
-    .system-card {
-        border: 1px solid rgba(128,128,128,0.25);
-        border-radius: 14px;
-        padding: 20px;
-        min-height: 180px;
-    }
-
-    .status-online {
-        font-weight: 700;
-    }
-    </style>
-    """,
+    """ <style> .block-container { padding-top: 1.5rem; padding-bottom: 3rem; } .main-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 0; } .sub-title { font-size: 1rem; opacity: 0.75; margin-bottom: 1.5rem; } .system-card { border: 1px solid rgba(128,128,128,0.25); border-radius: 14px; padding: 20px; min-height: 180px; } .status-online { font-weight: 700; } </style> """,
     unsafe_allow_html=True,
 )
 
@@ -503,565 +473,565 @@ elif page == "Marine Operations":
         else:
             st.info("Upload Voyage CSV to start analysis.")
 
+        # ============================================================
+    # 3. PMS / MAINTENANCE INTELLIGENCE
     # ============================================================
-# 3. PMS / MAINTENANCE INTELLIGENCE
-# ============================================================
-elif module == "PMS / Maintenance":
+    elif module == "PMS / Maintenance":
 
-    st.subheader("🔧 PMS / Maintenance Intelligence")
+        st.subheader("🔧 PMS / Maintenance Intelligence")
 
-    if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+        if vessel_name:
+            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        else:
+            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-    pms_file = st.file_uploader(
-        "Upload PMS / Maintenance CSV",
-        type=["csv"],
-        key="pms_csv_new",
-    )
+        pms_file = st.file_uploader(
+            "Upload PMS / Maintenance CSV",
+            type=["csv"],
+            key="pms_csv_new",
+        )
 
-    if pms_file is None:
-        st.info("Upload PMS CSV to start maintenance analysis.")
+        if pms_file is None:
+            st.info("Upload PMS CSV to start maintenance analysis.")
 
-    else:
-        try:
-            pms_df = pd.read_csv(pms_file)
+        else:
+            try:
+                pms_df = pd.read_csv(pms_file)
 
-            # Clean empty rows and columns
-            pms_df = pms_df.dropna(how="all")
-            pms_df = pms_df.dropna(axis=1, how="all")
+                # Clean empty rows and columns
+                pms_df = pms_df.dropna(how="all")
+                pms_df = pms_df.dropna(axis=1, how="all")
 
-            # Clean column names
-            pms_df.columns = [
-                str(col).strip()
-                for col in pms_df.columns
-            ]
+                # Clean column names
+                pms_df.columns = [
+                    str(col).strip()
+                    for col in pms_df.columns
+                ]
 
-            if pms_df.empty:
-                st.warning("⚠️ PMS CSV contains no maintenance records.")
+                if pms_df.empty:
+                    st.warning("⚠️ PMS CSV contains no maintenance records.")
 
-            else:
-                st.success(
-                    f"✅ PMS data loaded — {len(pms_df)} records"
-                )
+                else:
+                    st.success(
+                        f"✅ PMS data loaded — {len(pms_df)} records"
+                    )
 
-                # ------------------------------------------------
-                # PMS RECORDS
-                # ------------------------------------------------
-                st.markdown("### 📋 PMS Records")
+                    # ------------------------------------------------
+                    # PMS RECORDS
+                    # ------------------------------------------------
+                    st.markdown("### 📋 PMS Records")
 
-                st.dataframe(
-                    pms_df,
-                    use_container_width=True,
-                )
+                    st.dataframe(
+                        pms_df,
+                        use_container_width=True,
+                    )
 
-                st.metric(
-                    "PMS RECORDS",
-                    len(pms_df),
-                )
-
-                # ------------------------------------------------
-                # FACTS
-                # ------------------------------------------------
-                st.markdown("### 📊 Facts")
-
-                fact_col1, fact_col2 = st.columns(2)
-
-                with fact_col1:
                     st.metric(
-                        "Maintenance Records",
+                        "PMS RECORDS",
                         len(pms_df),
                     )
 
-                with fact_col2:
-                    st.metric(
-                        "Data Fields",
-                        len(pms_df.columns),
+                    # ------------------------------------------------
+                    # FACTS
+                    # ------------------------------------------------
+                    st.markdown("### 📊 Facts")
+
+                    fact_col1, fact_col2 = st.columns(2)
+
+                    with fact_col1:
+                        st.metric(
+                            "Maintenance Records",
+                            len(pms_df),
+                        )
+
+                    with fact_col2:
+                        st.metric(
+                            "Data Fields",
+                            len(pms_df.columns),
+                        )
+
+                    st.write(
+                        f"Total maintenance records: **{len(pms_df)}**"
                     )
 
-                st.write(
-                    f"Total maintenance records: **{len(pms_df)}**"
-                )
-
-                st.write(
-                    f"Total data fields detected: "
-                    f"**{len(pms_df.columns)}**"
-                )
-
-                # ------------------------------------------------
-                # DATA GAPS
-                # ------------------------------------------------
-                st.markdown("### 🔎 Data Gaps")
-
-                required_fields = [
-                    "vessel",
-                    "equipment",
-                    "maintenance",
-                    "due_date",
-                    "status",
-                ]
-
-                normalized_columns = {
-                    str(col)
-                    .strip()
-                    .lower()
-                    .replace(" ", "_")
-                    .replace("-", "_")
-                    for col in pms_df.columns
-                }
-
-                missing_fields = [
-                    field
-                    for field in required_fields
-                    if field not in normalized_columns
-                ]
-
-                if missing_fields:
-                    st.warning(
-                        "Missing recommended PMS fields: "
-                        + ", ".join(missing_fields)
-                    )
-                else:
-                    st.success("✅ Core PMS fields detected.")
-
-                # Check blank cells
-                blank_cells = int(
-                    pms_df.isna().sum().sum()
-                )
-
-                if blank_cells > 0:
-                    st.warning(
-                        f"⚠️ {blank_cells} empty data cells detected."
-                    )
-                else:
-                    st.success(
-                        "✅ No empty data cells detected."
+                    st.write(
+                        f"Total data fields detected: "
+                        f"**{len(pms_df.columns)}**"
                     )
 
-                # ------------------------------------------------
-                # MAINTENANCE RISK
-                # ------------------------------------------------
-                st.markdown("### ⚠️ Maintenance Risk")
+                    # ------------------------------------------------
+                    # DATA GAPS
+                    # ------------------------------------------------
+                    st.markdown("### 🔎 Data Gaps")
 
-                risk_score = len(missing_fields)
+                    required_fields = [
+                        "vessel",
+                        "equipment",
+                        "maintenance",
+                        "due_date",
+                        "status",
+                    ]
 
-                status_column = None
-
-                for col in pms_df.columns:
-                    if (
+                    normalized_columns = {
                         str(col)
                         .strip()
                         .lower()
                         .replace(" ", "_")
                         .replace("-", "_")
-                        == "status"
-                    ):
-                        status_column = col
-                        break
+                        for col in pms_df.columns
+                    }
 
-                overdue_count = 0
+                    missing_fields = [
+                        field
+                        for field in required_fields
+                        if field not in normalized_columns
+                    ]
 
-                if status_column is not None:
+                    if missing_fields:
+                        st.warning(
+                            "Missing recommended PMS fields: "
+                            + ", ".join(missing_fields)
+                        )
+                    else:
+                        st.success("✅ Core PMS fields detected.")
 
-                    status_values = (
-                        pms_df[status_column]
-                        .fillna("")
-                        .astype(str)
-                        .str.strip()
-                        .str.lower()
+                    # Check blank cells
+                    blank_cells = int(
+                        pms_df.isna().sum().sum()
                     )
 
-                    overdue_count = int(
-                        status_values.str.contains(
-                            "overdue",
-                            na=False,
-                        ).sum()
-                    )
-
-                    risk_score += overdue_count
-
-                    if overdue_count > 0:
-                        st.error(
-                            f"🔴 {overdue_count} overdue "
-                            f"maintenance record(s) detected."
+                    if blank_cells > 0:
+                        st.warning(
+                            f"⚠️ {blank_cells} empty data cells detected."
                         )
                     else:
                         st.success(
-                            "✅ No OVERDUE status detected."
+                            "✅ No empty data cells detected."
                         )
 
+                    # ------------------------------------------------
+                    # MAINTENANCE RISK
+                    # ------------------------------------------------
+                    st.markdown("### ⚠️ Maintenance Risk")
+
+                    risk_score = len(missing_fields)
+
+                    status_column = None
+
+                    for col in pms_df.columns:
+                        if (
+                            str(col)
+                            .strip()
+                            .lower()
+                            .replace(" ", "_")
+                            .replace("-", "_")
+                            == "status"
+                        ):
+                            status_column = col
+                            break
+
+                    overdue_count = 0
+
+                    if status_column is not None:
+
+                        status_values = (
+                            pms_df[status_column]
+                            .fillna("")
+                            .astype(str)
+                            .str.strip()
+                            .str.lower()
+                        )
+
+                        overdue_count = int(
+                            status_values.str.contains(
+                                "overdue",
+                                na=False,
+                            ).sum()
+                        )
+
+                        risk_score += overdue_count
+
+                        if overdue_count > 0:
+                            st.error(
+                                f"🔴 {overdue_count} overdue "
+                                f"maintenance record(s) detected."
+                            )
+                        else:
+                            st.success(
+                                "✅ No OVERDUE status detected."
+                            )
+
+                    else:
+                        st.warning(
+                            "Status column not detected. "
+                            "Overdue maintenance cannot be evaluated."
+                        )
+
+                    if risk_score == 0:
+                        st.success(
+                            "🟢 PMS DATA RISK: LOW"
+                        )
+
+                    elif risk_score <= 2:
+                        st.warning(
+                            "🟡 PMS DATA RISK: MODERATE"
+                        )
+
+                    else:
+                        st.error(
+                            "🔴 PMS DATA RISK: HIGH"
+                        )
+
+                    # ------------------------------------------------
+                    # PRIORITY ACTIONS
+                    # ------------------------------------------------
+                    st.markdown("### 🎯 Priority Actions")
+
+                    action_required = False
+
+                    if missing_fields:
+                        action_required = True
+
+                        st.warning(
+                            "Complete missing PMS information: "
+                            + ", ".join(missing_fields)
+                        )
+
+                    if overdue_count > 0:
+                        action_required = True
+
+                        st.error(
+                            "Review and close overdue maintenance "
+                            "items immediately."
+                        )
+
+                    if blank_cells > 0:
+                        action_required = True
+
+                        st.warning(
+                            "Complete empty PMS data cells "
+                            "before final operational review."
+                        )
+
+                    if not action_required:
+                        st.success(
+                            "✅ No immediate PMS data action detected."
+                        )
+
+            except pd.errors.EmptyDataError:
+                st.error(
+                    "❌ PMS CSV is empty. "
+                    "Please upload a CSV containing PMS records."
+                )
+
+            except pd.errors.ParserError as e:
+                st.error(
+                    f"❌ PMS CSV format error: {e}"
+                )
+
+            except Exception as e:
+                st.error(
+                    f"❌ Unable to read/analyze PMS CSV: {e}"
+                )
+
+
+    # ============================================================
+    # 4. DEFECTS INTELLIGENCE
+    # ============================================================
+    elif module == "Defects":
+
+        st.subheader("⚠️ Defects Intelligence")
+
+        if vessel_name:
+            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        else:
+            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+
+        defect_file = st.file_uploader(
+            "Upload Defects CSV",
+            type=["csv"],
+            key="defects_csv_new",
+        )
+
+        if defect_file is None:
+            st.info("Upload Defects CSV to start analysis.")
+
+        else:
+            try:
+                defect_df = pd.read_csv(defect_file)
+
+                defect_df = defect_df.dropna(how="all")
+                defect_df = defect_df.dropna(
+                    axis=1,
+                    how="all",
+                )
+
+                defect_df.columns = [
+                    str(col).strip()
+                    for col in defect_df.columns
+                ]
+
+                if defect_df.empty:
+                    st.warning(
+                        "⚠️ Defects CSV contains no records."
+                    )
+
                 else:
-                    st.warning(
-                        "Status column not detected. "
-                        "Overdue maintenance cannot be evaluated."
-                    )
-
-                if risk_score == 0:
                     st.success(
-                        "🟢 PMS DATA RISK: LOW"
+                        f"✅ Defect data loaded — "
+                        f"{len(defect_df)} records"
                     )
 
-                elif risk_score <= 2:
-                    st.warning(
-                        "🟡 PMS DATA RISK: MODERATE"
+                    st.markdown("### 📋 Defect Records")
+
+                    st.dataframe(
+                        defect_df,
+                        use_container_width=True,
                     )
 
-                else:
-                    st.error(
-                        "🔴 PMS DATA RISK: HIGH"
-                    )
-
-                # ------------------------------------------------
-                # PRIORITY ACTIONS
-                # ------------------------------------------------
-                st.markdown("### 🎯 Priority Actions")
-
-                action_required = False
-
-                if missing_fields:
-                    action_required = True
-
-                    st.warning(
-                        "Complete missing PMS information: "
-                        + ", ".join(missing_fields)
-                    )
-
-                if overdue_count > 0:
-                    action_required = True
-
-                    st.error(
-                        "Review and close overdue maintenance "
-                        "items immediately."
-                    )
-
-                if blank_cells > 0:
-                    action_required = True
-
-                    st.warning(
-                        "Complete empty PMS data cells "
-                        "before final operational review."
-                    )
-
-                if not action_required:
-                    st.success(
-                        "✅ No immediate PMS data action detected."
-                    )
-
-        except pd.errors.EmptyDataError:
-            st.error(
-                "❌ PMS CSV is empty. "
-                "Please upload a CSV containing PMS records."
-            )
-
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ PMS CSV format error: {e}"
-            )
-
-        except Exception as e:
-            st.error(
-                f"❌ Unable to read/analyze PMS CSV: {e}"
-            )
-
-
-# ============================================================
-# 4. DEFECTS INTELLIGENCE
-# ============================================================
-elif module == "Defects":
-
-    st.subheader("⚠️ Defects Intelligence")
-
-    if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-    defect_file = st.file_uploader(
-        "Upload Defects CSV",
-        type=["csv"],
-        key="defects_csv_new",
-    )
-
-    if defect_file is None:
-        st.info("Upload Defects CSV to start analysis.")
-
-    else:
-        try:
-            defect_df = pd.read_csv(defect_file)
-
-            defect_df = defect_df.dropna(how="all")
-            defect_df = defect_df.dropna(
-                axis=1,
-                how="all",
-            )
-
-            defect_df.columns = [
-                str(col).strip()
-                for col in defect_df.columns
-            ]
-
-            if defect_df.empty:
-                st.warning(
-                    "⚠️ Defects CSV contains no records."
-                )
-
-            else:
-                st.success(
-                    f"✅ Defect data loaded — "
-                    f"{len(defect_df)} records"
-                )
-
-                st.markdown("### 📋 Defect Records")
-
-                st.dataframe(
-                    defect_df,
-                    use_container_width=True,
-                )
-
-                st.metric(
-                    "DEFECT RECORDS",
-                    len(defect_df),
-                )
-
-                st.markdown("### 📊 Defect Facts")
-
-                d1, d2 = st.columns(2)
-
-                with d1:
                     st.metric(
-                        "Total Defects",
+                        "DEFECT RECORDS",
                         len(defect_df),
                     )
 
-                with d2:
-                    st.metric(
-                        "Data Fields",
-                        len(defect_df.columns),
-                    )
+                    st.markdown("### 📊 Defect Facts")
 
-        except pd.errors.EmptyDataError:
-            st.error(
-                "❌ Defects CSV is empty. "
-                "Please upload a CSV containing defect records."
-            )
+                    d1, d2 = st.columns(2)
 
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ Defects CSV format error: {e}"
-            )
+                    with d1:
+                        st.metric(
+                            "Total Defects",
+                            len(defect_df),
+                        )
 
-        except Exception as e:
-            st.error(
-                f"❌ Unable to read Defects CSV: {e}"
-            )
+                    with d2:
+                        st.metric(
+                            "Data Fields",
+                            len(defect_df.columns),
+                        )
+
+            except pd.errors.EmptyDataError:
+                st.error(
+                    "❌ Defects CSV is empty. "
+                    "Please upload a CSV containing defect records."
+                )
+
+            except pd.errors.ParserError as e:
+                st.error(
+                    f"❌ Defects CSV format error: {e}"
+                )
+
+            except Exception as e:
+                st.error(
+                    f"❌ Unable to read Defects CSV: {e}"
+                )
 
 
-# ============================================================
-# 5. CERTIFICATES INTELLIGENCE
-# ============================================================
-elif module == "Certificates":
+    # ============================================================
+    # 5. CERTIFICATES INTELLIGENCE
+    # ============================================================
+    elif module == "Certificates":
 
-    st.subheader("📜 Certificates Intelligence")
+        st.subheader("📜 Certificates Intelligence")
 
-    if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+        if vessel_name:
+            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        else:
+            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-    certificate_file = st.file_uploader(
-        "Upload Certificates CSV",
-        type=["csv"],
-        key="certificates_csv_new",
-    )
-
-    if certificate_file is None:
-        st.info(
-            "Upload Certificates CSV to start analysis."
+        certificate_file = st.file_uploader(
+            "Upload Certificates CSV",
+            type=["csv"],
+            key="certificates_csv_new",
         )
 
-    else:
-        try:
-            certificate_df = pd.read_csv(
-                certificate_file
+        if certificate_file is None:
+            st.info(
+                "Upload Certificates CSV to start analysis."
             )
 
-            certificate_df = certificate_df.dropna(
-                how="all"
-            )
-
-            certificate_df = certificate_df.dropna(
-                axis=1,
-                how="all",
-            )
-
-            certificate_df.columns = [
-                str(col).strip()
-                for col in certificate_df.columns
-            ]
-
-            if certificate_df.empty:
-                st.warning(
-                    "⚠️ Certificates CSV contains no records."
+        else:
+            try:
+                certificate_df = pd.read_csv(
+                    certificate_file
                 )
 
-            else:
-                st.success(
-                    f"✅ Certificate data loaded — "
-                    f"{len(certificate_df)} records"
+                certificate_df = certificate_df.dropna(
+                    how="all"
                 )
 
-                st.markdown(
-                    "### 📋 Certificate Records"
+                certificate_df = certificate_df.dropna(
+                    axis=1,
+                    how="all",
                 )
 
-                st.dataframe(
-                    certificate_df,
-                    use_container_width=True,
-                )
+                certificate_df.columns = [
+                    str(col).strip()
+                    for col in certificate_df.columns
+                ]
 
-                st.metric(
-                    "CERTIFICATE RECORDS",
-                    len(certificate_df),
-                )
+                if certificate_df.empty:
+                    st.warning(
+                        "⚠️ Certificates CSV contains no records."
+                    )
 
-                st.markdown(
-                    "### 📊 Certificate Facts"
-                )
+                else:
+                    st.success(
+                        f"✅ Certificate data loaded — "
+                        f"{len(certificate_df)} records"
+                    )
 
-                c1, c2 = st.columns(2)
+                    st.markdown(
+                        "### 📋 Certificate Records"
+                    )
 
-                with c1:
+                    st.dataframe(
+                        certificate_df,
+                        use_container_width=True,
+                    )
+
                     st.metric(
-                        "Certificates",
+                        "CERTIFICATE RECORDS",
                         len(certificate_df),
                     )
 
-                with c2:
-                    st.metric(
-                        "Data Fields",
-                        len(certificate_df.columns),
+                    st.markdown(
+                        "### 📊 Certificate Facts"
                     )
 
-        except pd.errors.EmptyDataError:
-            st.error(
-                "❌ Certificates CSV is empty. "
-                "Please upload a CSV containing "
-                "certificate records."
-            )
+                    c1, c2 = st.columns(2)
 
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ Certificates CSV format error: {e}"
-            )
+                    with c1:
+                        st.metric(
+                            "Certificates",
+                            len(certificate_df),
+                        )
 
-        except Exception as e:
-            st.error(
-                f"❌ Unable to read Certificates CSV: {e}"
-            )
+                    with c2:
+                        st.metric(
+                            "Data Fields",
+                            len(certificate_df.columns),
+                        )
+
+            except pd.errors.EmptyDataError:
+                st.error(
+                    "❌ Certificates CSV is empty. "
+                    "Please upload a CSV containing "
+                    "certificate records."
+                )
+
+            except pd.errors.ParserError as e:
+                st.error(
+                    f"❌ Certificates CSV format error: {e}"
+                )
+
+            except Exception as e:
+                st.error(
+                    f"❌ Unable to read Certificates CSV: {e}"
+                )
 
 
-# ============================================================
-# 6. BUNKER INTELLIGENCE
-# ============================================================
-elif module == "Bunker":
+    # ============================================================
+    # 6. BUNKER INTELLIGENCE
+    # ============================================================
+    elif module == "Bunker":
 
-    st.subheader("⛽ Bunker Intelligence")
+        st.subheader("⛽ Bunker Intelligence")
 
-    if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+        if vessel_name:
+            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        else:
+            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-    bunker_file = st.file_uploader(
-        "Upload Bunker CSV",
-        type=["csv"],
-        key="bunker_csv_new",
-    )
-
-    if bunker_file is None:
-        st.info(
-            "Upload Bunker CSV to start analysis."
+        bunker_file = st.file_uploader(
+            "Upload Bunker CSV",
+            type=["csv"],
+            key="bunker_csv_new",
         )
 
-    else:
-        try:
-            bunker_df = pd.read_csv(
-                bunker_file
+        if bunker_file is None:
+            st.info(
+                "Upload Bunker CSV to start analysis."
             )
 
-            bunker_df = bunker_df.dropna(
-                how="all"
-            )
-
-            bunker_df = bunker_df.dropna(
-                axis=1,
-                how="all",
-            )
-
-            bunker_df.columns = [
-                str(col).strip()
-                for col in bunker_df.columns
-            ]
-
-            if bunker_df.empty:
-                st.warning(
-                    "⚠️ Bunker CSV contains no records."
+        else:
+            try:
+                bunker_df = pd.read_csv(
+                    bunker_file
                 )
 
-            else:
-                st.success(
-                    f"✅ Bunker data loaded — "
-                    f"{len(bunker_df)} records"
+                bunker_df = bunker_df.dropna(
+                    how="all"
                 )
 
-                st.markdown(
-                    "### 📋 Bunker Records"
+                bunker_df = bunker_df.dropna(
+                    axis=1,
+                    how="all",
                 )
 
-                st.dataframe(
-                    bunker_df,
-                    use_container_width=True,
-                )
+                bunker_df.columns = [
+                    str(col).strip()
+                    for col in bunker_df.columns
+                ]
 
-                st.metric(
-                    "BUNKER RECORDS",
-                    len(bunker_df),
-                )
+                if bunker_df.empty:
+                    st.warning(
+                        "⚠️ Bunker CSV contains no records."
+                    )
 
-                st.markdown(
-                    "### 📊 Bunker Facts"
-                )
+                else:
+                    st.success(
+                        f"✅ Bunker data loaded — "
+                        f"{len(bunker_df)} records"
+                    )
 
-                b1, b2 = st.columns(2)
+                    st.markdown(
+                        "### 📋 Bunker Records"
+                    )
 
-                with b1:
+                    st.dataframe(
+                        bunker_df,
+                        use_container_width=True,
+                    )
+
                     st.metric(
-                        "Bunker Records",
+                        "BUNKER RECORDS",
                         len(bunker_df),
                     )
 
-                with b2:
-                    st.metric(
-                        "Data Fields",
-                        len(bunker_df.columns),
+                    st.markdown(
+                        "### 📊 Bunker Facts"
                     )
 
-        except pd.errors.EmptyDataError:
-            st.error(
-                "❌ Bunker CSV is empty. "
-                "Please upload a CSV containing bunker records."
-            )
+                    b1, b2 = st.columns(2)
 
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ Bunker CSV format error: {e}"
-            )
+                    with b1:
+                        st.metric(
+                            "Bunker Records",
+                            len(bunker_df),
+                        )
 
-        except Exception as e:
-            st.error(
-                f"❌ Unable to read Bunker CSV: {e}"
-            )
+                    with b2:
+                        st.metric(
+                            "Data Fields",
+                            len(bunker_df.columns),
+                        )
+
+            except pd.errors.EmptyDataError:
+                st.error(
+                    "❌ Bunker CSV is empty. "
+                    "Please upload a CSV containing bunker records."
+                )
+
+            except pd.errors.ParserError as e:
+                st.error(
+                    f"❌ Bunker CSV format error: {e}"
+                )
+
+            except Exception as e:
+                st.error(
+                    f"❌ Unable to read Bunker CSV: {e}"
+                )
 
     # ==========================================================
     # 7. CARGO
@@ -1223,157 +1193,157 @@ elif page == "Fuel Efficiency BBM":
     if vessel_name:
         st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
     # ============================================================
-# UNIVERSAL DPR CSV READER - UNLIMITED / DYNAMIC COLUMNS
-# ============================================================
+    # UNIVERSAL DPR CSV READER - UNLIMITED / DYNAMIC COLUMNS
+    # ============================================================
 
-st.subheader("📄 DPR Vessel Data")
+    st.subheader("📄 DPR Vessel Data")
 
-uploaded_file = st.file_uploader(
-    "Upload DPR Vessel (CSV)",
-    type=["csv"],
-    key="universal_dpr_csv",
-    help=(
-        "Upload DPR kapal dalam format CSV. "
-        "Sistem menerima jumlah kolom secara dinamis."
-    ),
-)
+    uploaded_file = st.file_uploader(
+        "Upload DPR Vessel (CSV)",
+        type=["csv"],
+        key="universal_dpr_csv",
+        help=(
+            "Upload DPR kapal dalam format CSV. "
+            "Sistem menerima jumlah kolom secara dinamis."
+        ),
+    )
 
-if uploaded_file is not None:
-    try:
-        # ----------------------------------------------------
-        # READ FILE ONCE
-        # ----------------------------------------------------
-        raw_data = uploaded_file.getvalue()
-
-        if not raw_data:
-            raise ValueError("File CSV kosong.")
-
-        # ----------------------------------------------------
-        # AUTO DETECT ENCODING
-        # ----------------------------------------------------
-        decoded_text = None
-        detected_encoding = None
-
-        for encoding in (
-            "utf-8-sig",
-            "utf-8",
-            "cp1252",
-            "latin1",
-        ):
-            try:
-                decoded_text = raw_data.decode(encoding)
-                detected_encoding = encoding
-                break
-            except UnicodeDecodeError:
-                continue
-
-        if decoded_text is None:
-            raise ValueError("Encoding CSV tidak dapat dikenali.")
-
-        # ----------------------------------------------------
-        # AUTO DETECT DELIMITER
-        # comma / semicolon / tab / pipe
-        # ----------------------------------------------------
-        sample = decoded_text[:10000]
-
+    if uploaded_file is not None:
         try:
-            dialect = csv.Sniffer().sniff(
-                sample,
-                delimiters=",;\t|",
+            # ----------------------------------------------------
+            # READ FILE ONCE
+            # ----------------------------------------------------
+            raw_data = uploaded_file.getvalue()
+
+            if not raw_data:
+                raise ValueError("File CSV kosong.")
+
+            # ----------------------------------------------------
+            # AUTO DETECT ENCODING
+            # ----------------------------------------------------
+            decoded_text = None
+            detected_encoding = None
+
+            for encoding in (
+                "utf-8-sig",
+                "utf-8",
+                "cp1252",
+                "latin1",
+            ):
+                try:
+                    decoded_text = raw_data.decode(encoding)
+                    detected_encoding = encoding
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+            if decoded_text is None:
+                raise ValueError("Encoding CSV tidak dapat dikenali.")
+
+            # ----------------------------------------------------
+            # AUTO DETECT DELIMITER
+            # comma / semicolon / tab / pipe
+            # ----------------------------------------------------
+            sample = decoded_text[:10000]
+
+            try:
+                dialect = csv.Sniffer().sniff(
+                    sample,
+                    delimiters=",;\t|",
+                )
+                detected_separator = dialect.delimiter
+            except csv.Error:
+                detected_separator = ","
+
+            # ----------------------------------------------------
+            # READ DPR - UNLIMITED / DYNAMIC COLUMNS
+            # ----------------------------------------------------
+            df = pd.read_csv(
+                io.StringIO(decoded_text),
+                sep=detected_separator,
+                engine="python",
             )
-            detected_separator = dialect.delimiter
-        except csv.Error:
-            detected_separator = ","
 
-        # ----------------------------------------------------
-        # READ DPR - UNLIMITED / DYNAMIC COLUMNS
-        # ----------------------------------------------------
-        df = pd.read_csv(
-            io.StringIO(decoded_text),
-            sep=detected_separator,
-            engine="python",
-        )
+            # ----------------------------------------------------
+            # CLEAN COLUMN NAMES
+            # ----------------------------------------------------
+            df.columns = [
+                str(column).strip()
+                for column in df.columns
+            ]
 
-        # ----------------------------------------------------
-        # CLEAN COLUMN NAMES
-        # ----------------------------------------------------
-        df.columns = [
-            str(column).strip()
-            for column in df.columns
-        ]
+            # Remove completely empty / unnamed columns only
+            empty_columns = [
+                column
+                for column in df.columns
+                if str(column).lower().startswith("unnamed:")
+                and df[column].isna().all()
+            ]
 
-        # Remove completely empty / unnamed columns only
-        empty_columns = [
-            column
-            for column in df.columns
-            if str(column).lower().startswith("unnamed:")
-            and df[column].isna().all()
-        ]
+            if empty_columns:
+                df = df.drop(columns=empty_columns)
 
-        if empty_columns:
-            df = df.drop(columns=empty_columns)
+            # ----------------------------------------------------
+            # DPR INFORMATION
+            # ----------------------------------------------------
+            total_rows = len(df)
+            total_columns = len(df.columns)
+            empty_cells = int(df.isna().sum().sum())
 
-        # ----------------------------------------------------
-        # DPR INFORMATION
-        # ----------------------------------------------------
-        total_rows = len(df)
-        total_columns = len(df.columns)
-        empty_cells = int(df.isna().sum().sum())
+            st.success(
+                f"✅ DPR berhasil dibaca — "
+                f"{total_rows:,} rows × {total_columns:,} columns"
+            )
 
-        st.success(
-            f"✅ DPR berhasil dibaca — "
-            f"{total_rows:,} rows × {total_columns:,} columns"
-        )
+            m1, m2, m3, m4 = st.columns(4)
 
-        m1, m2, m3, m4 = st.columns(4)
+            m1.metric(
+                "DPR Records",
+                f"{total_rows:,}",
+            )
 
-        m1.metric(
-            "DPR Records",
-            f"{total_rows:,}",
-        )
+            m2.metric(
+                "Detected Columns",
+                f"{total_columns:,}",
+            )
 
-        m2.metric(
-            "Detected Columns",
-            f"{total_columns:,}",
-        )
+            m3.metric(
+                "Empty Cells",
+                f"{empty_cells:,}",
+            )
 
-        m3.metric(
-            "Empty Cells",
-            f"{empty_cells:,}",
-        )
+            m4.metric(
+                "Reader Status",
+                "READY",
+            )
 
-        m4.metric(
-            "Reader Status",
-            "READY",
-        )
+            # ----------------------------------------------------
+            # FILE DETECTION INFORMATION
+            # ----------------------------------------------------
+            with st.expander("🔎 DPR File Detection", expanded=False):
+                st.write(f"Encoding: {detected_encoding}")
+                st.write(f"Delimiter: {repr(detected_separator)}")
+                st.write(f"Columns detected: {total_columns:,}")
 
-        # ----------------------------------------------------
-        # FILE DETECTION INFORMATION
-        # ----------------------------------------------------
-        with st.expander("🔎 DPR File Detection", expanded=False):
-            st.write(f"Encoding: {detected_encoding}")
-            st.write(f"Delimiter: {repr(detected_separator)}")
-            st.write(f"Columns detected: {total_columns:,}")
+            # ----------------------------------------------------
+            # DPR DATA PREVIEW
+            # ----------------------------------------------------
+            st.markdown("### 📋 DPR Data Preview")
 
-        # ----------------------------------------------------
-        # DPR DATA PREVIEW
-        # ----------------------------------------------------
-        st.markdown("### 📋 DPR Data Preview")
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+            )
 
-        st.dataframe(
-            df,
-            use_container_width=True,
-            hide_index=True,
-        )
+            st.success(
+                "🚢 DPR DATA READY FOR FUEL INTELLIGENCE"
+            )
 
-        st.success(
-            "🚢 DPR DATA READY FOR FUEL INTELLIGENCE"
-        )
-
-    except Exception as error:
-        st.error(
-            f"❌ DPR CSV tidak dapat dibaca: {error}"
-        )
+        except Exception as error:
+            st.error(
+                f"❌ DPR CSV tidak dapat dibaca: {error}"
+            )
 
     # ==========================================================
     # ENGINE SPECIFICATION DATABASE & AUTO-FILL
@@ -1551,13 +1521,13 @@ if uploaded_file is not None:
 
         calculated_power_kw = rated_power * (engine_load_pct / 100.0)
 
-# DPR Dynamic CSV + Fuel Intelligence calculation verified
+        # DPR Dynamic CSV + Fuel Intelligence calculation verified
 
-expected_fuel_kg = (
-    calculated_power_kw
-    * running_hours
-    * base_sfoc
-)
+        expected_fuel_kg = (
+            calculated_power_kw
+            * running_hours
+            * base_sfoc
+        )
 
         expected_fuel_mt = expected_fuel_kg / 1_000_000
 
