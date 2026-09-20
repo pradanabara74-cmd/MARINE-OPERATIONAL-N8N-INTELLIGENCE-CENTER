@@ -727,41 +727,72 @@ elif module == "PMS / Maintenance":
 # ============================================================
 elif module == "Defects":
 
-        st.subheader("⚠️ Defects Intelligence")
+    st.subheader("⚠️ Defects Intelligence")
 
-        defect_file = st.file_uploader(
-            "Upload Defects CSV",
-            type=["csv"],
-            key="defects_csv",
-        )
+    if vessel_name:
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+    else:
+        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-        if defect_file is not None:
-            try:
-                defect_df = pd.read_csv(defect_file)
+    defect_file = st.file_uploader(
+        "Upload Defects CSV",
+        type=["csv"],
+        key="defects_csv"
+    )
 
+    if defect_file is None:
+        st.info("Upload Defects CSV to start analysis.")
+
+    else:
+        try:
+            defect_df = pd.read_csv(defect_file)
+
+            # Remove completely empty rows and columns
+            defect_df = defect_df.dropna(how="all")
+            defect_df = defect_df.dropna(axis=1, how="all")
+
+            # Clean column names
+            defect_df.columns = [
+                str(col).strip()
+                for col in defect_df.columns
+            ]
+
+            if defect_df.empty:
+                st.warning("⚠️ Defects CSV contains no records.")
+
+            else:
                 st.success(
                     f"✅ Defect data loaded — {len(defect_df)} records"
                 )
 
+                st.markdown("### 📋 Defect Records")
+
                 st.dataframe(
                     defect_df,
-                    use_container_width=True,
+                    use_container_width=True
                 )
 
                 st.metric(
                     "DEFECT RECORDS",
-                    len(defect_df),
+                    len(defect_df)
                 )
 
-            except Exception as e:
-                st.error(f"Unable to read Defects CSV: {e}")
-        else:
-            st.info("Upload Defects CSV to start analysis.")
+        except pd.errors.EmptyDataError:
+            st.error(
+                "❌ Defects CSV is empty. "
+                "Please upload a CSV containing defect records."
+            )
 
-    # ==========================================================
-    # 5. CERTIFICATES
-    # ==========================================================
-    elif module == "Certificates":
+        except Exception as e:
+            st.error(
+                f"❌ Unable to read Defects CSV: {e}"
+            )
+
+
+# ============================================================
+# 5. CERTIFICATES
+# ============================================================
+elif module == "Certificates":
 
         st.subheader("📜 Certificates Intelligence")
 
