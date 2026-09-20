@@ -262,77 +262,133 @@ st.markdown(
 
 if page == "Command Center":
 
-    st.subheader("Executive Command Center")
+    st.header("⚓ Executive Command Center")
+
+    # ==========================================================
+    # ACTIVE GLOBAL VESSEL
+    # ==========================================================
+
+    if vessel_name:
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+    else:
+        st.warning(
+            "⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL."
+        )
+
+    st.divider()
+
+    # ==========================================================
+    # MASTER SYSTEM STATUS
+    # ==========================================================
+
+    st.subheader("🌐 Intelligence System Status")
 
     k1, k2, k3, k4 = st.columns(4)
 
-    k1.metric("Marine Operations", "ONLINE")
-    k2.metric("Fuel Intelligence", "ONLINE")
-    k3.metric("QHSSE Intelligence", "ONLINE")
-    k4.metric("N8N Engine", "READY")
+    k1.metric(
+        "Marine Operations",
+        "ONLINE"
+    )
+
+    k2.metric(
+        "Fuel Intelligence",
+        "ONLINE"
+    )
+
+    k3.metric(
+        "QHSSE Intelligence",
+        "ONLINE"
+    )
+
+    k4.metric(
+        "N8N Engine",
+        "READY"
+    )
 
     st.divider()
+
+    # ==========================================================
+    # OPERATIONAL INTELLIGENCE CENTER
+    # ==========================================================
+
+    st.subheader("📊 Operational Intelligence Center")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown(
-            """
-            <div class="system-card">
-            <h3>⚓ Marine Operations</h3>
-            Vessel Operations<br>
-            Voyage Intelligence<br>
-            PMS / Maintenance<br>
-            Defects & Certificates<br>
-            Bunker & Cargo<br>
-            Marine AI Co-Pilot
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("### ⚓ Marine Operations")
+        st.write("Vessel Operations")
+        st.write("Voyage Intelligence")
+        st.write("PMS / Maintenance")
+        st.write("Defects & Certificates")
+        st.write("Bunker & Cargo")
+        st.write("Marine AI Co-Pilot")
 
     with col2:
-        st.markdown(
-            """
-            <div class="system-card">
-            <h3>⛽ Fuel Efficiency BBM</h3>
-            Unlimited DPR CSV<br>
-            Engine Database<br>
-            RPM / Load / SFOC<br>
-            Fuel Performance<br>
-            Anomaly Detection<br>
-            Fuel AI Intelligence
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("### ⛽ Fuel Efficiency BBM")
+        st.write("Unlimited DPR CSV")
+        st.write("Engine Database")
+        st.write("RPM / Load / SFOC")
+        st.write("Fuel Performance")
+        st.write("Anomaly Detection")
+        st.write("Fuel AI Intelligence")
 
     with col3:
-        st.markdown(
-            """
-            <div class="system-card">
-            <h3>🛡️ QHSSE Company</h3>
-            Incident / Near Miss<br>
-            Inspection<br>
-            Audit & Findings<br>
-            Risk Assessment<br>
-            NCR / CAR<br>
-            QHSSE AI Intelligence
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown("### 🛡️ QHSSE Company")
+        st.write("Incident / Near Miss")
+        st.write("Inspection")
+        st.write("Audit & Findings")
+        st.write("Risk Assessment")
+        st.write("NCR / CAR")
+        st.write("QHSSE AI Intelligence")
 
     st.divider()
 
-    st.info(
-        "Master Command Center siap. "
-        "Database, AI dan N8N workflow akan dihubungkan pada tahap berikutnya."
+    # ==========================================================
+    # CURRENT FUEL CONTROL
+    # Uses the calculation already proven in the sidebar.
+    # ==========================================================
+
+    st.subheader("⛽ Current Fuel Control")
+
+    f1, f2, f3, f4 = st.columns(4)
+
+    f1.metric(
+        "Active RPM",
+        f"{active_rpm} RPM"
     )
 
-# ============================================================
-# MARINE OPERATIONS
-# ============================================================
+    f2.metric(
+        "Main Engine",
+        f"{total_me_consumption:,.2f} L"
+    )
+
+    f3.metric(
+        "AE 24 Hours",
+        f"{ae_24h_liter:,.2f} L"
+    )
+
+    f4.metric(
+        "Total BBM / MGO",
+        f"{total_bbm_liter:,.2f} L"
+    )
+
+    st.caption(
+        "Total BBM / MGO = Main Engine Consumption + "
+        "Auxiliary Engine 24 Hours"
+    )
+
+    st.divider()
+
+    # ==========================================================
+    # COMMAND CENTER STATUS
+    # ==========================================================
+
+    st.success(
+        "✅ COMMAND CENTER ONLINE — "
+        "Marine Operations, Fuel Intelligence, "
+        "QHSSE and N8N systems ready."
+    )
 
 elif page == "Marine Operations":
 
