@@ -1550,7 +1550,7 @@ elif page == "Company Presentation":
     st.markdown("---")
     st.subheader("📥 Company Presentation & Template")
 
-    presentation_file = "Marine_Operational_Intelligence_Center_Presentation.pdf"
+    presentation_file = "Marine_Operational_Intelligence_Center_PREMIUM_16x9.pdf"
     template_file = "Shipping_Company_Implementation_Template.pdf"
 
     d1, d2 = st.columns(2)
@@ -1582,7 +1582,7 @@ elif page == "Company Presentation":
         else:
             st.warning(f"Upload {template_file} to activate this download.")
 
-    pptx_file = "Marine_Operational_Intelligence_Center_Presentation.pptx"
+    pptx_file = "Marine_Operational_Intelligence_Center_PREMIUM_16x9.pptx"
     if os.path.exists(pptx_file):
         with open(pptx_file, "rb") as f:
             st.download_button(
