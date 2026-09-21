@@ -828,392 +828,392 @@ elif page == "Marine Operations":
 
 
     # ============================================================
-# 5. CERTIFICATES INTELLIGENCE
-# ============================================================
-elif module == "Certificates":
+    # 5. CERTIFICATES INTELLIGENCE
+    # ============================================================
+    elif module == "Certificates":
 
-    st.subheader("📜 Certificates Intelligence")
+        st.subheader("📜 Certificates Intelligence")
 
-    # ========================================================
-    # ACTIVE VESSEL
-    # ========================================================
-    if vessel_name:
-        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+        # ========================================================
+        # ACTIVE VESSEL
+        # ========================================================
+        if vessel_name:
+            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+        else:
+            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-    # ========================================================
-    # UPLOAD CERTIFICATES CSV
-    # ========================================================
-    certificate_file = st.file_uploader(
-        "Upload Certificates CSV",
-        type=["csv"],
-        key="certificates_csv_v3",
-    )
+        # ========================================================
+        # UPLOAD CERTIFICATES CSV
+        # ========================================================
+        certificate_file = st.file_uploader(
+            "Upload Certificates CSV",
+            type=["csv"],
+            key="certificates_csv_v3",
+        )
 
-    if certificate_file is None:
-        st.info("Upload Certificates CSV to start analysis.")
+        if certificate_file is None:
+            st.info("Upload Certificates CSV to start analysis.")
 
-    else:
-        certificate_df = None
-        certificate_error = None
+        else:
+            certificate_df = None
+            certificate_error = None
 
-        try:
-            certificate_df = pd.read_csv(certificate_file)
+            try:
+                certificate_df = pd.read_csv(certificate_file)
 
-        except pd.errors.EmptyDataError:
-            certificate_error = (
-                "❌ Certificates CSV is empty. "
-                "Please upload a CSV containing certificate records."
-            )
-
-        except pd.errors.ParserError as e:
-            certificate_error = (
-                f"❌ Certificates CSV format error: {e}"
-            )
-
-        except UnicodeDecodeError:
-            certificate_error = (
-                "❌ CSV encoding error. "
-                "Please save the file as UTF-8 CSV."
-            )
-
-        except Exception as e:
-            certificate_error = (
-                f"❌ Unable to read Certificates CSV: {e}"
-            )
-
-        if certificate_error:
-            st.error(certificate_error)
-
-        elif certificate_df is not None:
-
-            # =================================================
-            # CLEAN DATA
-            # =================================================
-            certificate_df = certificate_df.dropna(
-                axis=0,
-                how="all",
-            )
-
-            certificate_df = certificate_df.dropna(
-                axis=1,
-                how="all",
-            )
-
-            certificate_df.columns = [
-                str(col).strip()
-                for col in certificate_df.columns
-            ]
-
-            if certificate_df.empty:
-                st.warning(
-                    "⚠️ Certificates CSV contains no records."
+            except pd.errors.EmptyDataError:
+                certificate_error = (
+                    "❌ Certificates CSV is empty. "
+                    "Please upload a CSV containing certificate records."
                 )
 
-            else:
-                st.success(
-                    f"✅ Certificate data loaded: "
-                    f"{len(certificate_df)} record(s)"
+            except pd.errors.ParserError as e:
+                certificate_error = (
+                    f"❌ Certificates CSV format error: {e}"
                 )
 
-                # =============================================
-                # CERTIFICATE RECORDS
-                # =============================================
-                st.markdown("### 📋 Certificate Records")
-
-                st.dataframe(
-                    certificate_df,
-                    use_container_width=True,
+            except UnicodeDecodeError:
+                certificate_error = (
+                    "❌ CSV encoding error. "
+                    "Please save the file as UTF-8 CSV."
                 )
 
-                # =============================================
-                # CERTIFICATE FACTS
-                # =============================================
-                st.markdown("### 📊 Certificate Facts")
+            except Exception as e:
+                certificate_error = (
+                    f"❌ Unable to read Certificates CSV: {e}"
+                )
 
-                fact1, fact2, fact3 = st.columns(3)
+            if certificate_error:
+                st.error(certificate_error)
 
-                with fact1:
-                    st.metric(
-                        "Certificate Records",
-                        len(certificate_df),
-                    )
+            elif certificate_df is not None:
 
-                with fact2:
-                    st.metric(
-                        "Data Fields",
-                        len(certificate_df.columns),
-                    )
+                # =================================================
+                # CLEAN DATA
+                # =================================================
+                certificate_df = certificate_df.dropna(
+                    axis=0,
+                    how="all",
+                )
 
-                with fact3:
-                    st.metric(
-                        "Empty Cells",
-                        int(certificate_df.isna().sum().sum()),
-                    )
+                certificate_df = certificate_df.dropna(
+                    axis=1,
+                    how="all",
+                )
 
-                # =============================================
-                # NORMALIZE COLUMN NAMES
-                # =============================================
-                def normalize_cert_column(column_name):
-                    text = str(column_name).strip().lower()
-                    text = text.replace("_", " ")
-                    text = text.replace("-", " ")
-                    text = text.replace(".", "")
-                    text = " ".join(text.split())
-                    return text
-
-                normalized_columns = {
-                    normalize_cert_column(col): col
+                certificate_df.columns = [
+                    str(col).strip()
                     for col in certificate_df.columns
-                }
-
-                # =============================================
-                # DATA GAPS
-                # =============================================
-                st.markdown("### 🔎 Data Gaps")
-
-                required_fields = [
-                    "Vessel",
-                    "Certificate",
-                    "Certificate No",
-                    "Issued By",
-                    "Issue Date",
-                    "Expiry Date",
                 ]
 
-                missing_fields = []
-
-                for required_field in required_fields:
-                    normalized_required = normalize_cert_column(
-                        required_field
-                    )
-
-                    if normalized_required not in normalized_columns:
-                        missing_fields.append(required_field)
-
-                if missing_fields:
+                if certificate_df.empty:
                     st.warning(
-                        "⚠️ Missing field(s): "
-                        + ", ".join(missing_fields)
-                    )
-                else:
-                    st.success(
-                        "✅ All core certificate fields detected."
-                    )
-
-                empty_cells = int(
-                    certificate_df.isna().sum().sum()
-                )
-
-                if empty_cells > 0:
-                    st.warning(
-                        f"⚠️ {empty_cells} empty data cell(s) detected."
-                    )
-                else:
-                    st.success(
-                        "✅ No empty certificate data cells detected."
-                    )
-
-                # =============================================
-                # FIND EXPIRY COLUMN
-                # =============================================
-                expiry_column = None
-
-                expiry_names = [
-                    "expiry date",
-                    "expiration date",
-                    "expire date",
-                    "valid until",
-                    "validity date",
-                    "expiry",
-                ]
-
-                for normalized_name in expiry_names:
-                    if normalized_name in normalized_columns:
-                        expiry_column = normalized_columns[
-                            normalized_name
-                        ]
-                        break
-
-                # =============================================
-                # CERTIFICATE EXPIRY RISK
-                # =============================================
-                st.markdown("### ⚠️ Certificate Expiry Risk")
-
-                if expiry_column is None:
-                    st.warning(
-                        "⚠️ Expiry Date column not detected."
-                    )
-
-                    st.info(
-                        "Add an Expiry Date column to activate "
-                        "automatic expiry monitoring."
+                        "⚠️ Certificates CSV contains no records."
                     )
 
                 else:
-                    expiry_dates = pd.to_datetime(
-                        certificate_df[expiry_column],
-                        errors="coerce",
+                    st.success(
+                        f"✅ Certificate data loaded: "
+                        f"{len(certificate_df)} record(s)"
                     )
 
-                    today = pd.Timestamp.today().normalize()
-
-                    days_remaining = (
-                        expiry_dates - today
-                    ).dt.days
-
-                    expired_count = int(
-                        (days_remaining < 0).sum()
-                    )
-
-                    expiring_soon_count = int(
-                        (
-                            (days_remaining >= 0)
-                            & (days_remaining <= 90)
-                        ).sum()
-                    )
-
-                    valid_count = int(
-                        (days_remaining > 90).sum()
-                    )
-
-                    unknown_count = int(
-                        days_remaining.isna().sum()
-                    )
-
-                    r1, r2, r3, r4 = st.columns(4)
-
-                    with r1:
-                        st.metric(
-                            "Expired",
-                            expired_count,
-                        )
-
-                    with r2:
-                        st.metric(
-                            "≤ 90 Days",
-                            expiring_soon_count,
-                        )
-
-                    with r3:
-                        st.metric(
-                            "Valid > 90 Days",
-                            valid_count,
-                        )
-
-                    with r4:
-                        st.metric(
-                            "Unknown",
-                            unknown_count,
-                        )
-
-                    # =========================================
-                    # PRIORITY ACTIONS
-                    # =========================================
-                    st.markdown("### 🎯 Priority Actions")
-
-                    if expired_count > 0:
-                        st.error(
-                            f"🔴 {expired_count} expired "
-                            "certificate(s) require immediate review."
-                        )
-
-                    if expiring_soon_count > 0:
-                        st.warning(
-                            f"🟠 {expiring_soon_count} certificate(s) "
-                            "expire within 90 days. "
-                            "Start renewal planning."
-                        )
-
-                    if unknown_count > 0:
-                        st.warning(
-                            f"⚪ {unknown_count} certificate(s) have "
-                            "missing or invalid expiry dates."
-                        )
-
-                    if (
-                        expired_count == 0
-                        and expiring_soon_count == 0
-                        and unknown_count == 0
-                    ):
-                        st.success(
-                            "🟢 No immediate certificate "
-                            "expiry action required."
-                        )
-
-                    # =========================================
-                    # CERTIFICATE STATUS
-                    # =========================================
-                    intelligence_df = certificate_df.copy()
-
-                    intelligence_df["Days Remaining"] = (
-                        days_remaining
-                    )
-
-                    def get_certificate_status(days):
-                        if pd.isna(days):
-                            return "UNKNOWN"
-
-                        if days < 0:
-                            return "EXPIRED"
-
-                        if days <= 90:
-                            return "EXPIRING SOON"
-
-                        return "VALID"
-
-                    intelligence_df["Certificate Status"] = (
-                        intelligence_df[
-                            "Days Remaining"
-                        ].apply(get_certificate_status)
-                    )
-
-                    # =========================================
-                    # INTELLIGENCE RECORDS
-                    # =========================================
-                    st.markdown(
-                        "### 📋 Certificate Intelligence Records"
-                    )
+                    # =============================================
+                    # CERTIFICATE RECORDS
+                    # =============================================
+                    st.markdown("### 📋 Certificate Records")
 
                     st.dataframe(
-                        intelligence_df,
+                        certificate_df,
                         use_container_width=True,
                     )
 
-                    # =========================================
-                    # ATTENTION REQUIRED
-                    # =========================================
-                    st.markdown("### 🚨 Attention Required")
+                    # =============================================
+                    # CERTIFICATE FACTS
+                    # =============================================
+                    st.markdown("### 📊 Certificate Facts")
 
-                    attention_df = intelligence_df[
-                        intelligence_df[
-                            "Certificate Status"
-                        ].isin(
-                            [
-                                "EXPIRED",
-                                "EXPIRING SOON",
-                                "UNKNOWN",
-                            ]
+                    fact1, fact2, fact3 = st.columns(3)
+
+                    with fact1:
+                        st.metric(
+                            "Certificate Records",
+                            len(certificate_df),
                         )
+
+                    with fact2:
+                        st.metric(
+                            "Data Fields",
+                            len(certificate_df.columns),
+                        )
+
+                    with fact3:
+                        st.metric(
+                            "Empty Cells",
+                            int(certificate_df.isna().sum().sum()),
+                        )
+
+                    # =============================================
+                    # NORMALIZE COLUMN NAMES
+                    # =============================================
+                    def normalize_cert_column(column_name):
+                        text = str(column_name).strip().lower()
+                        text = text.replace("_", " ")
+                        text = text.replace("-", " ")
+                        text = text.replace(".", "")
+                        text = " ".join(text.split())
+                        return text
+
+                    normalized_columns = {
+                        normalize_cert_column(col): col
+                        for col in certificate_df.columns
+                    }
+
+                    # =============================================
+                    # DATA GAPS
+                    # =============================================
+                    st.markdown("### 🔎 Data Gaps")
+
+                    required_fields = [
+                        "Vessel",
+                        "Certificate",
+                        "Certificate No",
+                        "Issued By",
+                        "Issue Date",
+                        "Expiry Date",
                     ]
 
-                    if attention_df.empty:
+                    missing_fields = []
+
+                    for required_field in required_fields:
+                        normalized_required = normalize_cert_column(
+                            required_field
+                        )
+
+                        if normalized_required not in normalized_columns:
+                            missing_fields.append(required_field)
+
+                    if missing_fields:
+                        st.warning(
+                            "⚠️ Missing field(s): "
+                            + ", ".join(missing_fields)
+                        )
+                    else:
                         st.success(
-                            "✅ No certificate records "
-                            "require immediate attention."
+                            "✅ All core certificate fields detected."
+                        )
+
+                    empty_cells = int(
+                        certificate_df.isna().sum().sum()
+                    )
+
+                    if empty_cells > 0:
+                        st.warning(
+                            f"⚠️ {empty_cells} empty data cell(s) detected."
+                        )
+                    else:
+                        st.success(
+                            "✅ No empty certificate data cells detected."
+                        )
+
+                    # =============================================
+                    # FIND EXPIRY COLUMN
+                    # =============================================
+                    expiry_column = None
+
+                    expiry_names = [
+                        "expiry date",
+                        "expiration date",
+                        "expire date",
+                        "valid until",
+                        "validity date",
+                        "expiry",
+                    ]
+
+                    for normalized_name in expiry_names:
+                        if normalized_name in normalized_columns:
+                            expiry_column = normalized_columns[
+                                normalized_name
+                            ]
+                            break
+
+                    # =============================================
+                    # CERTIFICATE EXPIRY RISK
+                    # =============================================
+                    st.markdown("### ⚠️ Certificate Expiry Risk")
+
+                    if expiry_column is None:
+                        st.warning(
+                            "⚠️ Expiry Date column not detected."
+                        )
+
+                        st.info(
+                            "Add an Expiry Date column to activate "
+                            "automatic expiry monitoring."
                         )
 
                     else:
+                        expiry_dates = pd.to_datetime(
+                            certificate_df[expiry_column],
+                            errors="coerce",
+                        )
+
+                        today = pd.Timestamp.today().normalize()
+
+                        days_remaining = (
+                            expiry_dates - today
+                        ).dt.days
+
+                        expired_count = int(
+                            (days_remaining < 0).sum()
+                        )
+
+                        expiring_soon_count = int(
+                            (
+                                (days_remaining >= 0)
+                                & (days_remaining <= 90)
+                            ).sum()
+                        )
+
+                        valid_count = int(
+                            (days_remaining > 90).sum()
+                        )
+
+                        unknown_count = int(
+                            days_remaining.isna().sum()
+                        )
+
+                        r1, r2, r3, r4 = st.columns(4)
+
+                        with r1:
+                            st.metric(
+                                "Expired",
+                                expired_count,
+                            )
+
+                        with r2:
+                            st.metric(
+                                "≤ 90 Days",
+                                expiring_soon_count,
+                            )
+
+                        with r3:
+                            st.metric(
+                                "Valid > 90 Days",
+                                valid_count,
+                            )
+
+                        with r4:
+                            st.metric(
+                                "Unknown",
+                                unknown_count,
+                            )
+
+                        # =========================================
+                        # PRIORITY ACTIONS
+                        # =========================================
+                        st.markdown("### 🎯 Priority Actions")
+
+                        if expired_count > 0:
+                            st.error(
+                                f"🔴 {expired_count} expired "
+                                "certificate(s) require immediate review."
+                            )
+
+                        if expiring_soon_count > 0:
+                            st.warning(
+                                f"🟠 {expiring_soon_count} certificate(s) "
+                                "expire within 90 days. "
+                                "Start renewal planning."
+                            )
+
+                        if unknown_count > 0:
+                            st.warning(
+                                f"⚪ {unknown_count} certificate(s) have "
+                                "missing or invalid expiry dates."
+                            )
+
+                        if (
+                            expired_count == 0
+                            and expiring_soon_count == 0
+                            and unknown_count == 0
+                        ):
+                            st.success(
+                                "🟢 No immediate certificate "
+                                "expiry action required."
+                            )
+
+                        # =========================================
+                        # CERTIFICATE STATUS
+                        # =========================================
+                        intelligence_df = certificate_df.copy()
+
+                        intelligence_df["Days Remaining"] = (
+                            days_remaining
+                        )
+
+                        def get_certificate_status(days):
+                            if pd.isna(days):
+                                return "UNKNOWN"
+
+                            if days < 0:
+                                return "EXPIRED"
+
+                            if days <= 90:
+                                return "EXPIRING SOON"
+
+                            return "VALID"
+
+                        intelligence_df["Certificate Status"] = (
+                            intelligence_df[
+                                "Days Remaining"
+                            ].apply(get_certificate_status)
+                        )
+
+                        # =========================================
+                        # INTELLIGENCE RECORDS
+                        # =========================================
+                        st.markdown(
+                            "### 📋 Certificate Intelligence Records"
+                        )
+
                         st.dataframe(
-                            attention_df,
+                            intelligence_df,
                             use_container_width=True,
                         )
 
-                        st.warning(
-                            f"⚠️ {len(attention_df)} certificate "
-                            "record(s) require attention."
-                        )
+                        # =========================================
+                        # ATTENTION REQUIRED
+                        # =========================================
+                        st.markdown("### 🚨 Attention Required")
+
+                        attention_df = intelligence_df[
+                            intelligence_df[
+                                "Certificate Status"
+                            ].isin(
+                                [
+                                    "EXPIRED",
+                                    "EXPIRING SOON",
+                                    "UNKNOWN",
+                                ]
+                            )
+                        ]
+
+                        if attention_df.empty:
+                            st.success(
+                                "✅ No certificate records "
+                                "require immediate attention."
+                            )
+
+                        else:
+                            st.dataframe(
+                                attention_df,
+                                use_container_width=True,
+                            )
+
+                            st.warning(
+                                f"⚠️ {len(attention_df)} certificate "
+                                "record(s) require attention."
+                            )
 
 
     # ============================================================
