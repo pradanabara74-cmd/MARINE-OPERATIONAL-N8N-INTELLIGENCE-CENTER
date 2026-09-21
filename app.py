@@ -59,7 +59,7 @@ with st.sidebar.expander("⛽ BBM/MGO RPM CONTROL", expanded=False):
 
     st.caption("Main Engine Fuel Consumption (Liter/Jam)")
 
-    rpm_points = [600, 700, 800, 900, 1000, 1200, 1300]
+    RPM_POINTS = [600, 700, 800, 900, 1000, 1100, 1200, 1300]
 
     # ------------------------------------------------------
     # PILIH RPM YANG SEDANG DIGUNAKAN
