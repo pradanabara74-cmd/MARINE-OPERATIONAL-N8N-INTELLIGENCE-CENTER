@@ -1576,12 +1576,12 @@ elif module == "Bunker":
                 f"❌ Unable to read Bunker CSV: {e}"
             )
 
-    # ==========================================================
-    # 7. CARGO
-    # ==========================================================
-    elif module == "Cargo":
+# ============================================================
+# 7. CARGO
+# ============================================================
+if module == "Cargo":
 
-        st.subheader("📦 Cargo Intelligence")
+    st.subheader("📦 Cargo Intelligence")
 
         cargo_file = st.file_uploader(
             "Upload Cargo CSV",
