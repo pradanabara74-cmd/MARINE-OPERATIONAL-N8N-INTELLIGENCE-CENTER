@@ -1218,13 +1218,15 @@ elif page == "Marine Operations":
     # ============================================================
 # 6. BUNKER INTELLIGENCE
 # ============================================================
-elif module == "Bunker":
+
+if module == "Bunker":
 
     st.subheader("⛽ Bunker Intelligence")
 
-    # --------------------------------------------------------
+    # ========================================================
     # ACTIVE VESSEL
-    # --------------------------------------------------------
+    # ========================================================
+
     if vessel_name:
         st.success(f"⚓ ACTIVE VESSEL: {vessel_name.upper()}")
     else:
@@ -1232,25 +1234,32 @@ elif module == "Bunker":
 
     st.divider()
 
-    # --------------------------------------------------------
+    # ========================================================
     # UPLOAD BUNKER CSV
-    # --------------------------------------------------------
+    # ========================================================
+
     st.markdown("### 📤 Upload Bunker CSV")
 
     bunker_file = st.file_uploader(
         "Upload Bunker CSV",
         type=["csv"],
-        key="bunker_intelligence_csv_v1",
+        key="bunker_intelligence_csv_final",
     )
 
     if bunker_file is None:
-        st.info("Upload Bunker CSV to start Bunker Intelligence analysis.")
+
+        st.info(
+            "Upload Bunker CSV to start Bunker Intelligence analysis."
+        )
 
     else:
+
         try:
-            # ------------------------------------------------
+
+            # =================================================
             # READ CSV
-            # ------------------------------------------------
+            # =================================================
+
             bunker_df = pd.read_csv(bunker_file)
 
             # Remove completely empty rows and columns
@@ -1264,17 +1273,22 @@ elif module == "Bunker":
             ]
 
             if bunker_df.empty:
-                st.warning("⚠️ Bunker CSV contains no usable records.")
+
+                st.warning("⚠️ Bunker CSV contains no records.")
 
             else:
+
                 st.success(
-                    f"✅ Bunker CSV loaded successfully — "
-                    f"{len(bunker_df)} record(s)"
+                    f"✅ Bunker data loaded — "
+                    f"{len(bunker_df)} records"
                 )
 
-                # ============================================
+                st.divider()
+
+                # =============================================
                 # BUNKER RECORDS
-                # ============================================
+                # =============================================
+
                 st.markdown("### 📋 Bunker Records")
 
                 st.dataframe(
@@ -1282,278 +1296,170 @@ elif module == "Bunker":
                     use_container_width=True,
                 )
 
-                # ============================================
+                st.divider()
+
+                # =============================================
                 # BUNKER FACTS
-                # ============================================
+                # =============================================
+
                 st.markdown("### 📊 Bunker Facts")
 
                 total_records = len(bunker_df)
                 total_columns = len(bunker_df.columns)
-                empty_cells = int(bunker_df.isna().sum().sum())
+                empty_cells = int(
+                    bunker_df.isna().sum().sum()
+                )
 
-                fact1, fact2, fact3 = st.columns(3)
+                b1, b2, b3 = st.columns(3)
 
-                with fact1:
+                with b1:
                     st.metric(
                         "Bunker Records",
                         total_records,
                     )
 
-                with fact2:
+                with b2:
                     st.metric(
-                        "CSV Columns",
+                        "Data Columns",
                         total_columns,
                     )
 
-                with fact3:
+                with b3:
                     st.metric(
                         "Empty Cells",
                         empty_cells,
                     )
 
-                st.write(
-                    "Detected columns:",
-                    ", ".join(map(str, bunker_df.columns)),
-                )
-
-                # ============================================
-                # NUMERIC BUNKER FACTS
-                # ============================================
-                numeric_df = bunker_df.apply(
-                    pd.to_numeric,
-                    errors="coerce",
-                )
-
-                usable_numeric_columns = [
-                    col
-                    for col in numeric_df.columns
-                    if numeric_df[col].notna().any()
-                ]
-
-                if usable_numeric_columns:
-                    st.markdown("#### 🔢 Numeric Data Summary")
-
-                    numeric_summary = (
-                        numeric_df[usable_numeric_columns]
-                        .describe()
-                        .transpose()
-                    )
-
-                    st.dataframe(
-                        numeric_summary,
-                        use_container_width=True,
-                    )
-
-                # ============================================
-                # ANALYSIS
-                # ============================================
-                st.markdown("### 🧠 Bunker Analysis")
-
-                analysis_col1, analysis_col2, analysis_col3 = st.columns(3)
-
-                complete_rows = int(
-                    bunker_df.notna().all(axis=1).sum()
-                )
-
-                incomplete_rows = int(
-                    bunker_df.isna().any(axis=1).sum()
-                )
-
-                with analysis_col1:
-                    st.metric(
-                        "Complete Records",
-                        complete_rows,
-                    )
-
-                with analysis_col2:
-                    st.metric(
-                        "Incomplete Records",
-                        incomplete_rows,
-                    )
-
-                with analysis_col3:
-                    completeness = (
-                        (1 - (
-                            empty_cells /
-                            max(
-                                total_records * total_columns,
-                                1,
-                            )
-                        )) * 100
-                    )
-
-                    st.metric(
-                        "Data Completeness",
-                        f"{completeness:.1f}%",
-                    )
-
-                # ============================================
-                # ATTENTION / DATA QUALITY
-                # ============================================
-                st.markdown("#### ⚠️ Attention Required")
-
-                if incomplete_rows > 0:
-                    st.warning(
-                        f"{incomplete_rows} bunker record(s) contain "
-                        "one or more missing values."
-                    )
-
-                    attention_df = bunker_df[
-                        bunker_df.isna().any(axis=1)
-                    ]
-
-                    st.dataframe(
-                        attention_df,
-                        use_container_width=True,
-                    )
-
-                else:
-                    st.success(
-                        "✅ All Bunker records are complete."
-                    )
-
-                # ============================================
-                # AUTOMATIC QUANTITY ANALYSIS
-                # ============================================
-                st.markdown("#### ⛽ Quantity Analysis")
-
-                normalized_columns = {
-                    str(col).strip().lower()
-                    .replace("_", " ")
-                    .replace("-", " "): col
-                    for col in bunker_df.columns
-                }
-
-                ordered_candidates = [
-                    "ordered liters",
-                    "ordered litres",
-                    "ordered quantity",
-                    "quantity ordered",
-                    "bunker ordered",
-                ]
-
-                received_candidates = [
-                    "received liters",
-                    "received litres",
-                    "received quantity",
-                    "quantity received",
-                    "bunker received",
-                ]
-
-                ordered_col = None
-                received_col = None
-
-                for candidate in ordered_candidates:
-                    if candidate in normalized_columns:
-                        ordered_col = normalized_columns[candidate]
-                        break
-
-                for candidate in received_candidates:
-                    if candidate in normalized_columns:
-                        received_col = normalized_columns[candidate]
-                        break
-
-                if ordered_col and received_col:
-
-                    ordered_values = pd.to_numeric(
-                        bunker_df[ordered_col],
-                        errors="coerce",
-                    )
-
-                    received_values = pd.to_numeric(
-                        bunker_df[received_col],
-                        errors="coerce",
-                    )
-
-                    total_ordered = float(
-                        ordered_values.fillna(0).sum()
-                    )
-
-                    total_received = float(
-                        received_values.fillna(0).sum()
-                    )
-
-                    shortage = total_ordered - total_received
-
-                    q1, q2, q3 = st.columns(3)
-
-                    with q1:
-                        st.metric(
-                            "Total Ordered",
-                            f"{total_ordered:,.2f} L",
-                        )
-
-                    with q2:
-                        st.metric(
-                            "Total Received",
-                            f"{total_received:,.2f} L",
-                        )
-
-                    with q3:
-                        st.metric(
-                            "Difference",
-                            f"{shortage:,.2f} L",
-                        )
-
-                    if shortage > 0:
-                        st.error(
-                            f"🚨 Bunker shortage detected: "
-                            f"{shortage:,.2f} litres."
-                        )
-
-                    elif shortage < 0:
-                        st.warning(
-                            f"⚠️ Received quantity exceeds ordered "
-                            f"quantity by {abs(shortage):,.2f} litres."
-                        )
-
-                    else:
-                        st.success(
-                            "✅ Ordered and received bunker quantities match."
-                        )
-
-                else:
-                    st.info(
-                        "Quantity comparison will activate automatically "
-                        "when Ordered Liters and Received Liters "
-                        "columns are available."
-                    )
-
-                # ============================================
-                # FINAL STATUS
-                # ============================================
                 st.divider()
 
-                if empty_cells == 0:
-                    st.success(
-                        "🟢 BUNKER INTELLIGENCE STATUS: NORMAL"
+                # =============================================
+                # NUMERIC BUNKER ANALYSIS
+                # =============================================
+
+                st.markdown("### ⛽ Bunker Data Analysis")
+
+                numeric_df = bunker_df.select_dtypes(
+                    include="number"
+                )
+
+                if not numeric_df.empty:
+
+                    summary_df = numeric_df.describe().T
+
+                    st.dataframe(
+                        summary_df,
+                        use_container_width=True,
                     )
+
+                    st.success(
+                        "✅ Numeric bunker data successfully analyzed."
+                    )
+
                 else:
-                    st.warning(
-                        "🟡 BUNKER INTELLIGENCE STATUS: "
-                        "DATA REQUIRES ATTENTION"
+
+                    st.info(
+                        "No numeric columns detected. "
+                        "Bunker records are still available for analysis."
+                    )
+
+                # =============================================
+                # DATA QUALITY ANALYSIS
+                # =============================================
+
+                st.markdown("### 🔎 Bunker Intelligence Analysis")
+
+                duplicate_records = int(
+                    bunker_df.duplicated().sum()
+                )
+
+                a1, a2, a3 = st.columns(3)
+
+                with a1:
+                    st.metric(
+                        "Total Records",
+                        total_records,
+                    )
+
+                with a2:
+                    st.metric(
+                        "Missing Data",
+                        empty_cells,
+                    )
+
+                with a3:
+                    st.metric(
+                        "Duplicate Records",
+                        duplicate_records,
+                    )
+
+                if empty_cells == 0 and duplicate_records == 0:
+
+                    st.success(
+                        "✅ Bunker dataset passed basic data-quality checks."
+                    )
+
+                else:
+
+                    if empty_cells > 0:
+                        st.warning(
+                            f"⚠️ {empty_cells} empty data cells detected."
+                        )
+
+                    if duplicate_records > 0:
+                        st.warning(
+                            f"⚠️ {duplicate_records} duplicate "
+                            f"record(s) detected."
+                        )
+
+                # =============================================
+                # COLUMN INFORMATION
+                # =============================================
+
+                with st.expander("📑 Bunker CSV Column Information"):
+
+                    column_info = pd.DataFrame(
+                        {
+                            "Column": bunker_df.columns,
+                            "Data Type": [
+                                str(dtype)
+                                for dtype in bunker_df.dtypes
+                            ],
+                            "Missing": [
+                                int(value)
+                                for value in bunker_df.isna().sum()
+                            ],
+                        }
+                    )
+
+                    st.dataframe(
+                        column_info,
+                        use_container_width=True,
                     )
 
         except pd.errors.EmptyDataError:
+
             st.error(
-                "❌ Bunker CSV is empty. "
-                "Please upload a CSV containing bunker records."
+                "❌ Bunker CSV is empty or contains no readable data."
             )
 
         except pd.errors.ParserError as e:
+
             st.error(
                 f"❌ Bunker CSV format error: {e}"
             )
 
         except Exception as e:
+
             st.error(
-                f"❌ Unable to process Bunker CSV: {e}"
+                f"❌ Unable to read Bunker CSV: {e}"
             )
+
 
 # ============================================================
 # 7. CARGO
 # ============================================================
-elif module == "Cargo":
+
+if module == "Cargo":
 
     st.subheader("📦 Cargo Intelligence")
 
