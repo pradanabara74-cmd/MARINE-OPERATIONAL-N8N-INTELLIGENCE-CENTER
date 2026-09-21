@@ -405,16 +405,7 @@ elif page == "Marine Operations":
     # UNIVERSAL CSV INTELLIGENCE ENGINE
     # ========================================================
 
-    def marine_csv_engine(
-        title,
-        icon,
-        uploader_key,
-        records_title,
-        facts_title,
-        analysis_title,
-        intelligence_title,
-        columns_title,
-    ):
+    def marine_csv_engine( title, icon, uploader_key, records_title, facts_title, analysis_title, intelligence_title, columns_title, ):
 
         st.subheader(f"{icon} {title}")
 
@@ -1509,382 +1500,112 @@ elif page == "Company Presentation":
         "Digital Maritime Operations Platform"
     )
 
-    st.markdown("---")
-
-    # ------------------------------------------------------------
-    # PRODUCT INTRODUCTION
-    # ------------------------------------------------------------
-
-    st.title("⚓ MARINE OPERATIONAL INTELLIGENCE CENTER")
-
+    # ============================================================
+    # PROFESSIONAL 16:9 DIGITAL DASHBOARD
+    # ============================================================
     st.markdown(
-        """
-        ### Fleet Operations • Fuel Efficiency • QHSSE • AI • N8N Automation
-
-        A centralized digital maritime intelligence platform designed
-        to support shipping companies in monitoring vessel operations,
-        fuel efficiency, QHSSE activities and operational workflows.
-
-        The platform provides a unified operational environment for
-        shore management and vessel operations.
-        """
+        """ <style> .cp-hero{ aspect-ratio:16/9; width:100%; box-sizing:border-box; border-radius:24px; padding:42px; color:#f7fbff; background: radial-gradient(circle at 85% 15%, rgba(38,198,218,.24), transparent 30%), linear-gradient(135deg,#06182b 0%,#0b2f4f 58%,#0c5262 100%); box-shadow:0 18px 50px rgba(0,0,0,.20); display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; } .cp-kicker{font-size:14px;letter-spacing:.16em;font-weight:700;opacity:.8} .cp-title{font-size:clamp(30px,4vw,58px);font-weight:900;line-height:1.03;margin:12px 0} .cp-sub{font-size:clamp(14px,1.6vw,22px);opacity:.88;max-width:900px} .cp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px} .cp-card{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16); border-radius:16px;padding:18px;backdrop-filter:blur(4px)} .cp-card b{display:block;font-size:clamp(16px,1.5vw,23px);margin-bottom:6px} .cp-card span{font-size:13px;opacity:.8} .cp-status{display:flex;justify-content:space-between;align-items:center; border-top:1px solid rgba(255,255,255,.18);padding-top:18px;margin-top:24px} .cp-online{font-weight:800;letter-spacing:.08em} @media(max-width:760px){.cp-hero{padding:24px}.cp-grid{grid-template-columns:1fr 1fr}} </style> <div class="cp-hero"> <div> <div class="cp-kicker">DIGITAL MARITIME OPERATIONS PLATFORM</div> <div class="cp-title">⚓ MARINE OPERATIONAL<br>N8N INTELLIGENCE CENTER</div> <div class="cp-sub">One command environment for Fleet Operations, Fuel Efficiency, QHSSE, AI-assisted analysis and N8N workflow automation.</div> <div class="cp-grid"> <div class="cp-card"><b>⚓ Fleet Operations</b><span>Voyage • PMS • Defects • Certificates • Cargo</span></div> <div class="cp-card"><b>⛽ Fuel Intelligence</b><span>DPR • RPM • Engine • Consumption • Variance</span></div> <div class="cp-card"><b>🛡️ QHSSE</b><span>Incident • Audit • Risk • Corrective Action</span></div> <div class="cp-card"><b>🤖 AI + N8N</b><span>Analysis • Alerts • Reports • Workflow Automation</span></div> </div> </div> <div class="cp-status"> <span>GLOBAL MULTI-VESSEL OPERATIONS</span> <span class="cp-online">● SYSTEM ONLINE</span> </div> </div> """,
+        unsafe_allow_html=True,
     )
 
-    st.info(
-        "🌐 Web-based platform — accessible through a browser "
-        "without installing desktop software."
-    )
-
-    # ------------------------------------------------------------
-    # EXECUTIVE OVERVIEW
-    # ------------------------------------------------------------
-
+    st.markdown("---")
     st.subheader("🌍 Executive Digital Command Center")
-
     c1, c2, c3, c4 = st.columns(4)
-
-    with c1:
-        st.metric("Fleet Operations", "ONLINE")
-
-    with c2:
-        st.metric("Fuel Intelligence", "ONLINE")
-
-    with c3:
-        st.metric("QHSSE Intelligence", "ONLINE")
-
-    with c4:
-        st.metric("N8N Automation", "READY")
+    c1.metric("Fleet Operations", "ONLINE")
+    c2.metric("Fuel Intelligence", "ONLINE")
+    c3.metric("QHSSE Intelligence", "ONLINE")
+    c4.metric("N8N Automation", "READY")
 
     st.markdown("---")
-
-    # ------------------------------------------------------------
-    # CORE PLATFORM
-    # ------------------------------------------------------------
-
     st.subheader("🚢 Integrated Maritime Intelligence Platform")
-
     col1, col2, col3 = st.columns(3)
-
     with col1:
-
-        st.markdown("### ⚓ Marine Operations")
-
-        st.markdown(
-            """
-            • Vessel Operations  
-            • Voyage Intelligence  
-            • PMS / Maintenance  
-            • Defects Intelligence  
-            • Certificates Intelligence  
-            • Bunker Intelligence  
-            • Cargo Intelligence  
-            • Audit & Findings  
-            • Action Tracker  
-            """
-        )
-
+        st.markdown("""### ⚓ Marine Operations • Vessel Operations • Voyage Intelligence • PMS / Maintenance • Defects & Certificates • Bunker & Cargo • Audit & Findings • Action Tracker""")
     with col2:
-
-        st.markdown("### ⛽ Fuel Efficiency BBM")
-
-        st.markdown(
-            """
-            • DPR / BBM Control  
-            • Main Engine Consumption  
-            • Auxiliary Engine Consumption  
-            • RPM Monitoring  
-            • Fuel Performance Analysis  
-            • Fuel Cost Control  
-            • Engine Database  
-            """
-        )
-
+        st.markdown("""### ⛽ Fuel Efficiency BBM • DPR / BBM Control • Main & Auxiliary Engine • RPM Monitoring • Fuel Performance Analysis • Fuel Cost Control • Engine Database""")
     with col3:
-
-        st.markdown("### 🛡️ QHSSE Company")
-
-        st.markdown(
-            """
-            • Incident / Near Miss  
-            • Inspection & Audit  
-            • Risk Management  
-            • Corrective Action  
-            • Regulatory Compliance  
-            • Safety Performance  
-            """
-        )
+        st.markdown("""### 🛡️ QHSSE Company • Incident / Near Miss • Inspection & Audit • Risk Management • Corrective Action • Regulatory Compliance • Safety Performance""")
 
     st.markdown("---")
-
-    # ------------------------------------------------------------
-    # AI + N8N
-    # ------------------------------------------------------------
-
     st.subheader("🤖 AI & Automation")
-
     ai1, ai2 = st.columns(2)
-
     with ai1:
-
-        st.markdown("### 🧠 Marine AI Co-Pilot")
-
-        st.markdown(
-            """
-            AI-supported operational workspace for:
-
-            • Data analysis  
-            • Operational summaries  
-            • Risk identification  
-            • Management recommendations  
-            • Natural-language assistance
-            """
-        )
-
+        st.markdown("""### 🧠 Marine AI Co-Pilot AI-supported workspace for data analysis, operational summaries, risk identification, management recommendations and natural-language assistance.""")
     with ai2:
+        st.markdown("""### 🔗 N8N Workflow Center Workflow architecture for operational notifications, reporting, approval processes, data integration and management alerts.""")
 
-        st.markdown("### 🔗 N8N Workflow Center")
-
-        st.markdown(
-            """
-            Workflow automation architecture for:
-
-            • Operational notifications  
-            • Reporting workflows  
-            • Approval processes  
-            • Data integration  
-            • Management alerts
-            """
+    st.markdown("---")
+    st.subheader("🎬 Video Presentation")
+    video_path = "presentation.mp4"
+    if os.path.exists(video_path):
+        st.video(video_path)
+        st.success("✅ Company presentation video is active.")
+    else:
+        st.info(
+            "🎬 Video player is ready. Upload presentation.mp4 to the same "
+            "GitHub repository folder as app.py to activate it automatically."
         )
 
     st.markdown("---")
-
-    # ------------------------------------------------------------
-    # LIVE DEMO
-    # ------------------------------------------------------------
-
-    st.subheader("🖥️ Interactive Live Demonstration")
-
-    st.success(
-        "You are currently viewing the LIVE web demonstration of "
-        "MARINE OPERATIONAL N8N INTELLIGENCE CENTER."
-    )
-
-    st.markdown(
-        """
-        Use the **INTELLIGENCE MODULE** menu on the left side to
-        explore the operational modules.
-
-        Recommended demonstration sequence:
-
-        **Command Center → Marine Operations → Fuel Efficiency BBM → "
-        "QHSSE Company → AI Intelligence → N8N Workflow Center**
-        """
-    )
-
-    st.markdown("---")
-
-    # ------------------------------------------------------------
-    # VIDEO PRESENTATION
-    # ------------------------------------------------------------
-
-    st.subheader("🎬 Video Presentation")
-
-    st.info(
-        "Company presentation video can be displayed here. "
-        "Upload the presentation video to the project repository "
-        "and configure its file path in this section."
-    )
-
-    # OPTIONAL:
-    # If presentation.mp4 is later uploaded to repository,
-    # remove the # from the following lines.
-    #
-    # try:
-    #     st.video("presentation.mp4")
-    # except Exception:
-    #     st.info("Presentation video is not available.")
-
-    st.markdown("---")
-
-    # ------------------------------------------------------------
-    # DOWNLOAD COMPANY PRESENTATION
-    # ------------------------------------------------------------
-
     st.subheader("📥 Company Presentation & Template")
 
-    presentation_text = """
-MARINE OPERATIONAL N8N INTELLIGENCE CENTER
-
-DIGITAL MARITIME OPERATIONS PLATFORM
-
-CORE SOLUTIONS
---------------
-
-1. MARINE OPERATIONS INTELLIGENCE
-   - Vessel Operations
-   - Voyage Intelligence
-   - PMS / Maintenance
-   - Defects
-   - Certificates
-   - Bunker
-   - Cargo
-   - Audit & Findings
-   - Action Tracker
-
-2. FUEL EFFICIENCY BBM
-   - DPR / BBM Control
-   - RPM Monitoring
-   - Main Engine Consumption
-   - Auxiliary Engine Consumption
-   - Fuel Performance Analysis
-   - Fuel Cost Control
-
-3. QHSSE COMPANY
-   - Incident / Near Miss
-   - Inspection & Audit
-   - Risk Management
-   - Corrective Action
-   - Regulatory Compliance
-
-4. AI INTELLIGENCE
-   - Marine AI Co-Pilot
-   - Operational Analysis
-   - Recommendations
-   - Management Support
-
-5. N8N WORKFLOW CENTER
-   - Workflow Automation
-   - Notifications
-   - Reporting
-   - Integration
-
-DEPLOYMENT
-----------
-
-Web-based deployment
-Multi-vessel architecture
-Company-customizable platform
-
-MARINE OPERATIONAL N8N INTELLIGENCE CENTER
-Digital Maritime Operations Platform
-"""
+    presentation_file = "Marine_Operational_Intelligence_Center_Presentation.pdf"
+    template_file = "Shipping_Company_Implementation_Template.pdf"
 
     d1, d2 = st.columns(2)
-
     with d1:
-
-        st.download_button(
-            label="📥 Download Company Presentation",
-            data=presentation_text,
-            file_name="Marine_Operational_Intelligence_Center_Presentation.txt",
-            mime="text/plain",
-            use_container_width=True,
-            key="download_company_presentation",
-        )
+        if os.path.exists(presentation_file):
+            with open(presentation_file, "rb") as f:
+                st.download_button(
+                    "📥 Download Company Presentation (PDF)",
+                    data=f.read(),
+                    file_name=presentation_file,
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="download_company_presentation_pdf",
+                )
+        else:
+            st.warning(f"Upload {presentation_file} to activate this download.")
 
     with d2:
+        if os.path.exists(template_file):
+            with open(template_file, "rb") as f:
+                st.download_button(
+                    "📋 Download Company Template (PDF)",
+                    data=f.read(),
+                    file_name=template_file,
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="download_company_template_pdf",
+                )
+        else:
+            st.warning(f"Upload {template_file} to activate this download.")
 
-        template_text = """
-MARINE OPERATIONAL INTELLIGENCE CENTER
-COMPANY IMPLEMENTATION TEMPLATE
-
-COMPANY NAME:
-COMPANY LOGO:
-HEAD OFFICE:
-CONTACT:
-EMAIL:
-
-FLEET INFORMATION
------------------
-NUMBER OF VESSELS:
-VESSEL TYPES:
-OPERATING AREA:
-
-MODULES REQUIRED
-----------------
-[ ] Marine Operations
-[ ] Voyage Intelligence
-[ ] PMS / Maintenance
-[ ] Defects
-[ ] Certificates
-[ ] Bunker
-[ ] Cargo
-[ ] Audit & Findings
-[ ] Action Tracker
-[ ] Fuel Efficiency BBM
-[ ] QHSSE
-[ ] AI Intelligence
-[ ] N8N Automation
-
-CUSTOM REQUIREMENTS:
-____________________________________
-____________________________________
-____________________________________
-
-MARINE OPERATIONAL N8N INTELLIGENCE CENTER
-"""
-
-        st.download_button(
-            label="📋 Download Company Template",
-            data=template_text,
-            file_name="Shipping_Company_Implementation_Template.txt",
-            mime="text/plain",
-            use_container_width=True,
-            key="download_company_template",
-        )
+    pptx_file = "Marine_Operational_Intelligence_Center_Presentation.pptx"
+    if os.path.exists(pptx_file):
+        with open(pptx_file, "rb") as f:
+            st.download_button(
+                "🖥️ Download Editable Presentation (PPTX)",
+                data=f.read(),
+                file_name=pptx_file,
+                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                use_container_width=True,
+                key="download_company_presentation_pptx",
+            )
 
     st.markdown("---")
-
-    # ------------------------------------------------------------
-    # DEPLOYMENT PRESENTATION
-    # ------------------------------------------------------------
-
     st.subheader("🌐 Deployment Options")
-
     dep1, dep2, dep3 = st.columns(3)
-
-    with dep1:
-        st.markdown(
-            """
-            ### ☁️ Cloud
-            Online access through secure web deployment.
-            """
-        )
-
-    with dep2:
-        st.markdown(
-            """
-            ### 🏢 Company
-            Customized company identity, fleet and operational modules.
-            """
-        )
-
-    with dep3:
-        st.markdown(
-            """
-            ### 🚢 Fleet
-            Designed for multi-vessel operational monitoring.
-            """
-        )
+    dep1.markdown("### ☁️ Cloud\nOnline access through secure web deployment.")
+    dep2.markdown("### 🏢 Company\nCustomized company identity, fleet and operational modules.")
+    dep3.markdown("### 🚢 Fleet\nDesigned for multi-vessel operational monitoring.")
 
     st.markdown("---")
-
-    # ------------------------------------------------------------
-    # COMPANY CUSTOMIZATION
-    # ------------------------------------------------------------
-
     st.subheader("🏢 Company Customization")
-
     st.markdown(
-        """
-        The platform can be configured for individual shipping companies:
-
-        **Company Logo • Company Name • Vessel Database • User Access •
-        Operational Modules • Management Dashboard • Reports •
-        AI Services • Workflow Automation**
-        """
+        "**Company Logo • Company Name • Vessel Database • User Access • "
+        "Operational Modules • Management Dashboard • Reports • AI Services • Workflow Automation**"
     )
-
     st.success(
         "⚓ MARINE OPERATIONAL N8N INTELLIGENCE CENTER — "
         "Integrated Digital Maritime Operations Platform"
