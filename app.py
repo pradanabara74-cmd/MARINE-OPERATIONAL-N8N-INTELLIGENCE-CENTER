@@ -1899,24 +1899,24 @@ elif module == "Audit & Findings":
 
     st.subheader("🔎 Audit & Findings")
 
-        audit_file = st.file_uploader(
-            "Upload Audit & Findings CSV",
-            type=["csv"],
-            key="audit_csv",
-        )
+    audit_file = st.file_uploader(
+        "Upload Audit & Findings CSV",
+        type=["csv"],
+        key="audit_csv",
+    )
 
-        if audit_file is not None:
-            try:
-                audit_df = pd.read_csv(audit_file)
+    if audit_file is not None:
+        try:
+            audit_df = pd.read_csv(audit_file)
 
-                st.success(
-                    f"✅ Audit data loaded — {len(audit_df)} records"
-                )
+            st.success(
+                f"✅ Audit data loaded — {len(audit_df)} records"
+            )
 
-                st.dataframe(
-                    audit_df,
-                    use_container_width=True,
-                )
+            st.dataframe(
+                audit_df,
+                use_container_width=True,
+            )
 
                 st.metric(
                     "AUDIT / FINDING RECORDS",
