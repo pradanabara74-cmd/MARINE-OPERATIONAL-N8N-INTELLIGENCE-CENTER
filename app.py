@@ -1216,61 +1216,224 @@ elif page == "Marine Operations":
 
 
     # ============================================================
-    # 6. BUNKER INTELLIGENCE
-    # ============================================================
-    elif module == "Bunker":
+# 6. BUNKER INTELLIGENCE
+# ============================================================
+elif module == "Bunker":
 
-        st.subheader("⛽ Bunker Intelligence")
+    st.subheader("⛽ Bunker Intelligence")
 
-        if vessel_name:
-            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-        else:
-            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
+    if vessel_name:
+        st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
+    else:
+        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-        bunker_file = st.file_uploader(
-            "Upload Bunker CSV",
-            type=["csv"],
-            key="bunker_csv_new",
-        )
+    bunker_file = st.file_uploader(
+        "Upload Bunker CSV",
+        type=["csv"],
+        key="bunker_csv_new",
+    )
 
-        if bunker_file is None:
-            st.info(
-                "Upload Bunker CSV to start analysis."
-            )
+    if bunker_file is None:
+        st.info("Upload Bunker CSV to start analysis.")
 
-        else:
-            try:
-                bunker_df = pd.read_csv(
-                    bunker_file
+    else:
+        try:
+            bunker_df = pd.read_csv(bunker_file)
+
+            # Remove completely empty rows and columns
+            bunker_df = bunker_df.dropna(how="all")
+            bunker_df = bunker_df.dropna(axis=1, how="all")
+
+            # Clean column names
+            bunker_df.columns = [
+                str(col).strip()
+                for col in bunker_df.columns
+            ]
+
+            if bunker_df.empty:
+                st.warning("⚠️ Bunker CSV contains no records.")
+
+            else:
+                st.success(
+                    f"✅ Bunker data loaded — {len(bunker_df)} records"
                 )
 
-                bunker_df = bunker_df.dropna(
-                    how="all"
+                # ====================================================
+                # BUNKER RECORDS
+                # ====================================================
+                st.markdown("### 📋 Bunker Records")
+
+                st.dataframe(
+                    bunker_df,
+                    use_container_width=True,
                 )
 
-                bunker_df = bunker_df.dropna(
-                    axis=1,
-                    how="all",
-                )
+                # ====================================================
+                # BUNKER FACTS
+                # ====================================================
+                st.markdown("### 📊 Bunker Facts")
 
-                bunker_df.columns = [
-                    str(col).strip()
-                    for col in bunker_df.columns
+                empty_cells = int(bunker_df.isna().sum().sum())
+
+                b1, b2, b3 = st.columns(3)
+
+                with b1:
+                    st.metric(
+                        "Bunker Records",
+                        len(bunker_df),
+                    )
+
+                with b2:
+                    st.metric(
+                        "Data Fields",
+                        len(bunker_df.columns),
+                    )
+
+                with b3:
+                    st.metric(
+                        "Empty Cells",
+                        empty_cells,
+                    )
+
+                # ====================================================
+                # DATA GAPS
+                # ====================================================
+                st.markdown("### 🔎 Data Gaps")
+
+                important_fields = [
+                    "Vessel",
+                    "Date",
+                    "Port",
+                    "Fuel Type",
+                    "Supplier",
+                    "Bunker Agreement No",
+                    "Ordered Liters",
+                    "Received Liters",
                 ]
 
-                if bunker_df.empty:
-                    st.warning(
-                        "⚠️ Bunker CSV contains no records."
-                    )
+                missing_fields = [
+                    field
+                    for field in important_fields
+                    if field not in bunker_df.columns
+                ]
 
+                if missing_fields:
+                    st.warning(
+                        "⚠️ Missing recommended field(s): "
+                        + ", ".join(missing_fields)
+                    )
                 else:
                     st.success(
-                        f"✅ Bunker data loaded — "
-                        f"{len(bunker_df)} records"
+                        "✅ All core bunker fields detected."
                     )
 
-                    st.markdown(
-                        "### 📋 Bunker Records"
+                if empty_cells > 0:
+                    st.warning(
+                        f"⚠️ {empty_cells} empty bunker data cell(s) detected."
+                    )
+                else:
+                    st.success(
+                        "✅ No empty bunker data cells detected."
+                    )
+
+                # ====================================================
+                # QUANTITY ANALYSIS
+                # ====================================================
+                st.markdown("### ⛽ Fuel Quantity Analysis")
+
+                ordered_col = None
+                received_col = None
+
+                for col in bunker_df.columns:
+                    normalized = (
+                        str(col)
+                        .strip()
+                        .lower()
+                        .replace("_", " ")
+                    )
+
+                    if normalized in [
+                        "ordered liters",
+                        "ordered litre",
+                        "ordered litres",
+                        "ordered quantity",
+                    ]:
+                        ordered_col = col
+
+                    if normalized in [
+                        "received liters",
+                        "received litre",
+                        "received litres",
+                        "received quantity",
+                    ]:
+                        received_col = col
+
+                if ordered_col is not None:
+                    bunker_df[ordered_col] = pd.to_numeric(
+                        bunker_df[ordered_col],
+                        errors="coerce",
+                    )
+
+                if received_col is not None:
+                    bunker_df[received_col] = pd.to_numeric(
+                        bunker_df[received_col],
+                        errors="coerce",
+                    )
+
+                total_ordered = (
+                    bunker_df[ordered_col].sum()
+                    if ordered_col is not None
+                    else 0
+                )
+
+                total_received = (
+                    bunker_df[received_col].sum()
+                    if received_col is not None
+                    else 0
+                )
+
+                q1, q2, q3 = st.columns(3)
+
+                with q1:
+                    st.metric(
+                        "Total Ordered",
+                        f"{total_ordered:,.0f} L",
+                    )
+
+                with q2:
+                    st.metric(
+                        "Total Received",
+                        f"{total_received:,.0f} L",
+                    )
+
+                variance = total_received - total_ordered
+
+                with q3:
+                    st.metric(
+                        "Total Variance",
+                        f"{variance:,.0f} L",
+                    )
+
+                # ====================================================
+                # ORDERED VS RECEIVED VARIANCE
+                # ====================================================
+                st.markdown(
+                    "### ⚖️ Ordered vs Received Variance"
+                )
+
+                if (
+                    ordered_col is not None
+                    and received_col is not None
+                ):
+                    bunker_df["Variance Liters"] = (
+                        bunker_df[received_col]
+                        - bunker_df[ordered_col]
+                    )
+
+                    bunker_df["Variance %"] = (
+                        bunker_df["Variance Liters"]
+                        / bunker_df[ordered_col].replace(0, pd.NA)
+                        * 100
                     )
 
                     st.dataframe(
@@ -1278,44 +1441,140 @@ elif page == "Marine Operations":
                         use_container_width=True,
                     )
 
+                else:
+                    st.info(
+                        "Ordered Liters and/or Received Liters "
+                        "columns were not detected."
+                    )
+
+                # ====================================================
+                # BUNKER RISK
+                # ====================================================
+                st.markdown("### ⚠️ Bunker Risk")
+
+                shortage_records = 0
+                high_variance_records = 0
+
+                if (
+                    ordered_col is not None
+                    and received_col is not None
+                ):
+                    shortage_records = int(
+                        (
+                            bunker_df[received_col]
+                            < bunker_df[ordered_col]
+                        ).sum()
+                    )
+
+                    variance_percent = (
+                        (
+                            bunker_df[received_col]
+                            - bunker_df[ordered_col]
+                        ).abs()
+                        / bunker_df[ordered_col].replace(0, pd.NA)
+                        * 100
+                    )
+
+                    high_variance_records = int(
+                        (variance_percent > 2).sum()
+                    )
+
+                r1, r2 = st.columns(2)
+
+                with r1:
                     st.metric(
-                        "BUNKER RECORDS",
-                        len(bunker_df),
+                        "Shortage Records",
+                        shortage_records,
                     )
 
-                    st.markdown(
-                        "### 📊 Bunker Facts"
+                with r2:
+                    st.metric(
+                        "Variance > 2%",
+                        high_variance_records,
                     )
 
-                    b1, b2 = st.columns(2)
+                # ====================================================
+                # PRIORITY ACTIONS
+                # ====================================================
+                st.markdown("### 🎯 Priority Actions")
 
-                    with b1:
-                        st.metric(
-                            "Bunker Records",
-                            len(bunker_df),
+                if shortage_records > 0:
+                    st.error(
+                        f"🔴 {shortage_records} bunker record(s) "
+                        "show received quantity below ordered quantity. "
+                        "Verify BDN, tank sounding and supplier figures."
+                    )
+
+                if high_variance_records > 0:
+                    st.warning(
+                        f"🟠 {high_variance_records} bunker record(s) "
+                        "have quantity variance above 2%. "
+                        "Review bunker documentation and measurements."
+                    )
+
+                if (
+                    shortage_records == 0
+                    and high_variance_records == 0
+                ):
+                    st.success(
+                        "✅ No significant bunker quantity discrepancy detected."
+                    )
+
+                # ====================================================
+                # ATTENTION REQUIRED
+                # ====================================================
+                st.markdown("### 🚨 Attention Required")
+
+                if (
+                    ordered_col is not None
+                    and received_col is not None
+                ):
+                    attention_mask = (
+                        bunker_df[received_col]
+                        < bunker_df[ordered_col]
+                    )
+
+                    attention_df = bunker_df[
+                        attention_mask
+                    ].copy()
+
+                    if not attention_df.empty:
+                        st.dataframe(
+                            attention_df,
+                            use_container_width=True,
                         )
 
-                    with b2:
-                        st.metric(
-                            "Data Fields",
-                            len(bunker_df.columns),
+                        st.warning(
+                            f"⚠️ {len(attention_df)} bunker record(s) "
+                            "require attention."
+                        )
+                    else:
+                        st.success(
+                            "✅ No bunker records currently require "
+                            "quantity-shortage attention."
                         )
 
-            except pd.errors.EmptyDataError:
-                st.error(
-                    "❌ Bunker CSV is empty. "
-                    "Please upload a CSV containing bunker records."
-                )
+                else:
+                    st.info(
+                        "Quantity risk analysis requires both "
+                        "Ordered Liters and Received Liters fields."
+                    )
 
-            except pd.errors.ParserError as e:
-                st.error(
-                    f"❌ Bunker CSV format error: {e}"
-                )
+        except pd.errors.EmptyDataError:
+            st.error(
+                "❌ Bunker CSV is empty. "
+                "Please upload a CSV containing bunker records."
+            )
 
-            except Exception as e:
-                st.error(
-                    f"❌ Unable to read Bunker CSV: {e}"
-                )
+        except pd.errors.ParserError as e:
+            st.error(
+                f"❌ Bunker CSV format error: {e}"
+            )
+
+        except Exception as e:
+            st.error(
+                f"❌ Unable to read Bunker CSV: {e}"
+            )
 
     # ==========================================================
     # 7. CARGO
