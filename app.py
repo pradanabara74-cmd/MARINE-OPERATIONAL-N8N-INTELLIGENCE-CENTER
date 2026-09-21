@@ -371,1719 +371,437 @@ elif page == "Marine Operations":
     else:
         st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
 
-    module = st.selectbox(
-        "Select Marine Operations Module",
-        [
-            "Vessel Operations",
-            "Voyage Intelligence",
-            "PMS / Maintenance",
-            "Defects",
-            "Certificates",
-            "Bunker",
-            "Cargo",
-            "Audit & Findings",
-            "Action Tracker",
-            "Marine AI Co-Pilot",
-        ],
-        key="marine_operations_module",
-    )
-
-    st.divider()
-
-    # ==========================================================
-    # 1. VESSEL OPERATIONS
-    # ==========================================================
-    if module == "Vessel Operations":
-
-        st.subheader("🚢 Vessel Operations")
-
-        c1, c2, c3 = st.columns(3)
-
-        with c1:
-            operation_status = st.selectbox(
-                "Operation Status",
-                [
-                    "Underway",
-                    "At Anchor",
-                    "In Port",
-                    "Standby",
-                    "Towing",
-                    "Maneuvering",
-                    "Off Hire",
-                ],
-                key="vessel_operation_status",
-            )
-
-        with c2:
-            speed_knots = st.number_input(
-                "Speed (Knots)",
-                min_value=0.0,
-                value=0.0,
-                step=0.1,
-                key="vessel_speed_knots",
-            )
-
-        with c3:
-            engine_hours = st.number_input(
-                "Main Engine Running Hours",
-                min_value=0.0,
-                value=0.0,
-                step=0.1,
-                key="vessel_engine_hours",
-            )
-
-        st.metric("CURRENT OPERATION", operation_status)
-        st.metric("CURRENT SPEED", f"{speed_knots:.1f} Knots")
-        st.metric("ME RUNNING HOURS", f"{engine_hours:.1f} Hours")
-
-    # ==========================================================
-    # 2. VOYAGE INTELLIGENCE
-    # ==========================================================
-    elif module == "Voyage Intelligence":
-
-        st.subheader("🧭 Voyage Intelligence")
-
-        voyage_file = st.file_uploader(
-            "Upload Voyage CSV",
-            type=["csv"],
-            key="voyage_csv",
-        )
-
-        if voyage_file is not None:
-            try:
-                voyage_df = pd.read_csv(voyage_file)
-
-                st.success(
-                    f"✅ Voyage data loaded — {len(voyage_df)} records"
-                )
-
-                st.dataframe(
-                    voyage_df,
-                    use_container_width=True,
-                )
-
-                st.metric(
-                    "VOYAGE RECORDS",
-                    len(voyage_df),
-                )
-
-            except Exception as e:
-                st.error(f"Unable to read Voyage CSV: {e}")
-        else:
-            st.info("Upload Voyage CSV to start analysis.")
-
-        # ============================================================
-    # 3. PMS / MAINTENANCE INTELLIGENCE
     # ============================================================
-    elif module == "PMS / Maintenance":
-
-        st.subheader("🔧 PMS / Maintenance Intelligence")
-
-        if vessel_name:
-            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-        else:
-            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-        pms_file = st.file_uploader(
-            "Upload PMS / Maintenance CSV",
-            type=["csv"],
-            key="pms_csv_new",
-        )
-
-        if pms_file is None:
-            st.info("Upload PMS CSV to start maintenance analysis.")
-
-        else:
-            try:
-                pms_df = pd.read_csv(pms_file)
-
-                # Clean empty rows and columns
-                pms_df = pms_df.dropna(how="all")
-                pms_df = pms_df.dropna(axis=1, how="all")
-
-                # Clean column names
-                pms_df.columns = [
-                    str(col).strip()
-                    for col in pms_df.columns
-                ]
-
-                if pms_df.empty:
-                    st.warning("⚠️ PMS CSV contains no maintenance records.")
-
-                else:
-                    st.success(
-                        f"✅ PMS data loaded — {len(pms_df)} records"
-                    )
-
-                    # ------------------------------------------------
-                    # PMS RECORDS
-                    # ------------------------------------------------
-                    st.markdown("### 📋 PMS Records")
-
-                    st.dataframe(
-                        pms_df,
-                        use_container_width=True,
-                    )
-
-                    st.metric(
-                        "PMS RECORDS",
-                        len(pms_df),
-                    )
-
-                    # ------------------------------------------------
-                    # FACTS
-                    # ------------------------------------------------
-                    st.markdown("### 📊 Facts")
-
-                    fact_col1, fact_col2 = st.columns(2)
-
-                    with fact_col1:
-                        st.metric(
-                            "Maintenance Records",
-                            len(pms_df),
-                        )
-
-                    with fact_col2:
-                        st.metric(
-                            "Data Fields",
-                            len(pms_df.columns),
-                        )
-
-                    st.write(
-                        f"Total maintenance records: **{len(pms_df)}**"
-                    )
-
-                    st.write(
-                        f"Total data fields detected: "
-                        f"**{len(pms_df.columns)}**"
-                    )
-
-                    # ------------------------------------------------
-                    # DATA GAPS
-                    # ------------------------------------------------
-                    st.markdown("### 🔎 Data Gaps")
-
-                    required_fields = [
-                        "vessel",
-                        "equipment",
-                        "maintenance",
-                        "due_date",
-                        "status",
-                    ]
-
-                    normalized_columns = {
-                        str(col)
-                        .strip()
-                        .lower()
-                        .replace(" ", "_")
-                        .replace("-", "_")
-                        for col in pms_df.columns
-                    }
-
-                    missing_fields = [
-                        field
-                        for field in required_fields
-                        if field not in normalized_columns
-                    ]
-
-                    if missing_fields:
-                        st.warning(
-                            "Missing recommended PMS fields: "
-                            + ", ".join(missing_fields)
-                        )
-                    else:
-                        st.success("✅ Core PMS fields detected.")
-
-                    # Check blank cells
-                    blank_cells = int(
-                        pms_df.isna().sum().sum()
-                    )
-
-                    if blank_cells > 0:
-                        st.warning(
-                            f"⚠️ {blank_cells} empty data cells detected."
-                        )
-                    else:
-                        st.success(
-                            "✅ No empty data cells detected."
-                        )
-
-                    # ------------------------------------------------
-                    # MAINTENANCE RISK
-                    # ------------------------------------------------
-                    st.markdown("### ⚠️ Maintenance Risk")
-
-                    risk_score = len(missing_fields)
-
-                    status_column = None
-
-                    for col in pms_df.columns:
-                        if (
-                            str(col)
-                            .strip()
-                            .lower()
-                            .replace(" ", "_")
-                            .replace("-", "_")
-                            == "status"
-                        ):
-                            status_column = col
-                            break
-
-                    overdue_count = 0
-
-                    if status_column is not None:
-
-                        status_values = (
-                            pms_df[status_column]
-                            .fillna("")
-                            .astype(str)
-                            .str.strip()
-                            .str.lower()
-                        )
-
-                        overdue_count = int(
-                            status_values.str.contains(
-                                "overdue",
-                                na=False,
-                            ).sum()
-                        )
-
-                        risk_score += overdue_count
-
-                        if overdue_count > 0:
-                            st.error(
-                                f"🔴 {overdue_count} overdue "
-                                f"maintenance record(s) detected."
-                            )
-                        else:
-                            st.success(
-                                "✅ No OVERDUE status detected."
-                            )
-
-                    else:
-                        st.warning(
-                            "Status column not detected. "
-                            "Overdue maintenance cannot be evaluated."
-                        )
-
-                    if risk_score == 0:
-                        st.success(
-                            "🟢 PMS DATA RISK: LOW"
-                        )
-
-                    elif risk_score <= 2:
-                        st.warning(
-                            "🟡 PMS DATA RISK: MODERATE"
-                        )
-
-                    else:
-                        st.error(
-                            "🔴 PMS DATA RISK: HIGH"
-                        )
-
-                    # ------------------------------------------------
-                    # PRIORITY ACTIONS
-                    # ------------------------------------------------
-                    st.markdown("### 🎯 Priority Actions")
-
-                    action_required = False
-
-                    if missing_fields:
-                        action_required = True
-
-                        st.warning(
-                            "Complete missing PMS information: "
-                            + ", ".join(missing_fields)
-                        )
-
-                    if overdue_count > 0:
-                        action_required = True
-
-                        st.error(
-                            "Review and close overdue maintenance "
-                            "items immediately."
-                        )
-
-                    if blank_cells > 0:
-                        action_required = True
-
-                        st.warning(
-                            "Complete empty PMS data cells "
-                            "before final operational review."
-                        )
-
-                    if not action_required:
-                        st.success(
-                            "✅ No immediate PMS data action detected."
-                        )
-
-            except pd.errors.EmptyDataError:
-                st.error(
-                    "❌ PMS CSV is empty. "
-                    "Please upload a CSV containing PMS records."
-                )
-
-            except pd.errors.ParserError as e:
-                st.error(
-                    f"❌ PMS CSV format error: {e}"
-                )
-
-            except Exception as e:
-                st.error(
-                    f"❌ Unable to read/analyze PMS CSV: {e}"
-                )
-
-
-    # ============================================================
-    # 4. DEFECTS INTELLIGENCE
-    # ============================================================
-    elif module == "Defects":
-
-        st.subheader("⚠️ Defects Intelligence")
-
-        if vessel_name:
-            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-        else:
-            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-        defect_file = st.file_uploader(
-            "Upload Defects CSV",
-            type=["csv"],
-            key="defects_csv_new",
-        )
-
-        if defect_file is None:
-            st.info("Upload Defects CSV to start analysis.")
-
-        else:
-            try:
-                defect_df = pd.read_csv(defect_file)
-
-                defect_df = defect_df.dropna(how="all")
-                defect_df = defect_df.dropna(
-                    axis=1,
-                    how="all",
-                )
-
-                defect_df.columns = [
-                    str(col).strip()
-                    for col in defect_df.columns
-                ]
-
-                if defect_df.empty:
-                    st.warning(
-                        "⚠️ Defects CSV contains no records."
-                    )
-
-                else:
-                    st.success(
-                        f"✅ Defect data loaded — "
-                        f"{len(defect_df)} records"
-                    )
-
-                    st.markdown("### 📋 Defect Records")
-
-                    st.dataframe(
-                        defect_df,
-                        use_container_width=True,
-                    )
-
-                    st.metric(
-                        "DEFECT RECORDS",
-                        len(defect_df),
-                    )
-
-                    st.markdown("### 📊 Defect Facts")
-
-                    d1, d2 = st.columns(2)
-
-                    with d1:
-                        st.metric(
-                            "Total Defects",
-                            len(defect_df),
-                        )
-
-                    with d2:
-                        st.metric(
-                            "Data Fields",
-                            len(defect_df.columns),
-                        )
-
-            except pd.errors.EmptyDataError:
-                st.error(
-                    "❌ Defects CSV is empty. "
-                    "Please upload a CSV containing defect records."
-                )
-
-            except pd.errors.ParserError as e:
-                st.error(
-                    f"❌ Defects CSV format error: {e}"
-                )
-
-            except Exception as e:
-                st.error(
-                    f"❌ Unable to read Defects CSV: {e}"
-                )
-
-
-    # ============================================================
-    # 5. CERTIFICATES INTELLIGENCE
-    # ============================================================
-    elif module == "Certificates":
-
-        st.subheader("📜 Certificates Intelligence")
-
-        # ========================================================
-        # ACTIVE VESSEL
-        # ========================================================
-        if vessel_name:
-            st.info(f"⚓ ACTIVE VESSEL: {vessel_name}")
-        else:
-            st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-        # ========================================================
-        # UPLOAD CERTIFICATES CSV
-        # ========================================================
-        certificate_file = st.file_uploader(
-            "Upload Certificates CSV",
-            type=["csv"],
-            key="certificates_csv_v3",
-        )
-
-        if certificate_file is None:
-            st.info("Upload Certificates CSV to start analysis.")
-
-        else:
-            certificate_df = None
-            certificate_error = None
-
-            try:
-                certificate_df = pd.read_csv(certificate_file)
-
-            except pd.errors.EmptyDataError:
-                certificate_error = (
-                    "❌ Certificates CSV is empty. "
-                    "Please upload a CSV containing certificate records."
-                )
-
-            except pd.errors.ParserError as e:
-                certificate_error = (
-                    f"❌ Certificates CSV format error: {e}"
-                )
-
-            except UnicodeDecodeError:
-                certificate_error = (
-                    "❌ CSV encoding error. "
-                    "Please save the file as UTF-8 CSV."
-                )
-
-            except Exception as e:
-                certificate_error = (
-                    f"❌ Unable to read Certificates CSV: {e}"
-                )
-
-            if certificate_error:
-                st.error(certificate_error)
-
-            elif certificate_df is not None:
-
-                # =================================================
-                # CLEAN DATA
-                # =================================================
-                certificate_df = certificate_df.dropna(
-                    axis=0,
-                    how="all",
-                )
-
-                certificate_df = certificate_df.dropna(
-                    axis=1,
-                    how="all",
-                )
-
-                certificate_df.columns = [
-                    str(col).strip()
-                    for col in certificate_df.columns
-                ]
-
-                if certificate_df.empty:
-                    st.warning(
-                        "⚠️ Certificates CSV contains no records."
-                    )
-
-                else:
-                    st.success(
-                        f"✅ Certificate data loaded: "
-                        f"{len(certificate_df)} record(s)"
-                    )
-
-                    # =============================================
-                    # CERTIFICATE RECORDS
-                    # =============================================
-                    st.markdown("### 📋 Certificate Records")
-
-                    st.dataframe(
-                        certificate_df,
-                        use_container_width=True,
-                    )
-
-                    # =============================================
-                    # CERTIFICATE FACTS
-                    # =============================================
-                    st.markdown("### 📊 Certificate Facts")
-
-                    fact1, fact2, fact3 = st.columns(3)
-
-                    with fact1:
-                        st.metric(
-                            "Certificate Records",
-                            len(certificate_df),
-                        )
-
-                    with fact2:
-                        st.metric(
-                            "Data Fields",
-                            len(certificate_df.columns),
-                        )
-
-                    with fact3:
-                        st.metric(
-                            "Empty Cells",
-                            int(certificate_df.isna().sum().sum()),
-                        )
-
-                    # =============================================
-                    # NORMALIZE COLUMN NAMES
-                    # =============================================
-                    def normalize_cert_column(column_name):
-                        text = str(column_name).strip().lower()
-                        text = text.replace("_", " ")
-                        text = text.replace("-", " ")
-                        text = text.replace(".", "")
-                        text = " ".join(text.split())
-                        return text
-
-                    normalized_columns = {
-                        normalize_cert_column(col): col
-                        for col in certificate_df.columns
-                    }
-
-                    # =============================================
-                    # DATA GAPS
-                    # =============================================
-                    st.markdown("### 🔎 Data Gaps")
-
-                    required_fields = [
-                        "Vessel",
-                        "Certificate",
-                        "Certificate No",
-                        "Issued By",
-                        "Issue Date",
-                        "Expiry Date",
-                    ]
-
-                    missing_fields = []
-
-                    for required_field in required_fields:
-                        normalized_required = normalize_cert_column(
-                            required_field
-                        )
-
-                        if normalized_required not in normalized_columns:
-                            missing_fields.append(required_field)
-
-                    if missing_fields:
-                        st.warning(
-                            "⚠️ Missing field(s): "
-                            + ", ".join(missing_fields)
-                        )
-                    else:
-                        st.success(
-                            "✅ All core certificate fields detected."
-                        )
-
-                    empty_cells = int(
-                        certificate_df.isna().sum().sum()
-                    )
-
-                    if empty_cells > 0:
-                        st.warning(
-                            f"⚠️ {empty_cells} empty data cell(s) detected."
-                        )
-                    else:
-                        st.success(
-                            "✅ No empty certificate data cells detected."
-                        )
-
-                    # =============================================
-                    # FIND EXPIRY COLUMN
-                    # =============================================
-                    expiry_column = None
-
-                    expiry_names = [
-                        "expiry date",
-                        "expiration date",
-                        "expire date",
-                        "valid until",
-                        "validity date",
-                        "expiry",
-                    ]
-
-                    for normalized_name in expiry_names:
-                        if normalized_name in normalized_columns:
-                            expiry_column = normalized_columns[
-                                normalized_name
-                            ]
-                            break
-
-                    # =============================================
-                    # CERTIFICATE EXPIRY RISK
-                    # =============================================
-                    st.markdown("### ⚠️ Certificate Expiry Risk")
-
-                    if expiry_column is None:
-                        st.warning(
-                            "⚠️ Expiry Date column not detected."
-                        )
-
-                        st.info(
-                            "Add an Expiry Date column to activate "
-                            "automatic expiry monitoring."
-                        )
-
-                    else:
-                        expiry_dates = pd.to_datetime(
-                            certificate_df[expiry_column],
-                            errors="coerce",
-                        )
-
-                        today = pd.Timestamp.today().normalize()
-
-                        days_remaining = (
-                            expiry_dates - today
-                        ).dt.days
-
-                        expired_count = int(
-                            (days_remaining < 0).sum()
-                        )
-
-                        expiring_soon_count = int(
-                            (
-                                (days_remaining >= 0)
-                                & (days_remaining <= 90)
-                            ).sum()
-                        )
-
-                        valid_count = int(
-                            (days_remaining > 90).sum()
-                        )
-
-                        unknown_count = int(
-                            days_remaining.isna().sum()
-                        )
-
-                        r1, r2, r3, r4 = st.columns(4)
-
-                        with r1:
-                            st.metric(
-                                "Expired",
-                                expired_count,
-                            )
-
-                        with r2:
-                            st.metric(
-                                "≤ 90 Days",
-                                expiring_soon_count,
-                            )
-
-                        with r3:
-                            st.metric(
-                                "Valid > 90 Days",
-                                valid_count,
-                            )
-
-                        with r4:
-                            st.metric(
-                                "Unknown",
-                                unknown_count,
-                            )
-
-                        # =========================================
-                        # PRIORITY ACTIONS
-                        # =========================================
-                        st.markdown("### 🎯 Priority Actions")
-
-                        if expired_count > 0:
-                            st.error(
-                                f"🔴 {expired_count} expired "
-                                "certificate(s) require immediate review."
-                            )
-
-                        if expiring_soon_count > 0:
-                            st.warning(
-                                f"🟠 {expiring_soon_count} certificate(s) "
-                                "expire within 90 days. "
-                                "Start renewal planning."
-                            )
-
-                        if unknown_count > 0:
-                            st.warning(
-                                f"⚪ {unknown_count} certificate(s) have "
-                                "missing or invalid expiry dates."
-                            )
-
-                        if (
-                            expired_count == 0
-                            and expiring_soon_count == 0
-                            and unknown_count == 0
-                        ):
-                            st.success(
-                                "🟢 No immediate certificate "
-                                "expiry action required."
-                            )
-
-                        # =========================================
-                        # CERTIFICATE STATUS
-                        # =========================================
-                        intelligence_df = certificate_df.copy()
-
-                        intelligence_df["Days Remaining"] = (
-                            days_remaining
-                        )
-
-                        def get_certificate_status(days):
-                            if pd.isna(days):
-                                return "UNKNOWN"
-
-                            if days < 0:
-                                return "EXPIRED"
-
-                            if days <= 90:
-                                return "EXPIRING SOON"
-
-                            return "VALID"
-
-                        intelligence_df["Certificate Status"] = (
-                            intelligence_df[
-                                "Days Remaining"
-                            ].apply(get_certificate_status)
-                        )
-
-                        # =========================================
-                        # INTELLIGENCE RECORDS
-                        # =========================================
-                        st.markdown(
-                            "### 📋 Certificate Intelligence Records"
-                        )
-
-                        st.dataframe(
-                            intelligence_df,
-                            use_container_width=True,
-                        )
-
-                        # =========================================
-                        # ATTENTION REQUIRED
-                        # =========================================
-                        st.markdown("### 🚨 Attention Required")
-
-                        attention_df = intelligence_df[
-                            intelligence_df[
-                                "Certificate Status"
-                            ].isin(
-                                [
-                                    "EXPIRED",
-                                    "EXPIRING SOON",
-                                    "UNKNOWN",
-                                ]
-                            )
-                        ]
-
-                        if attention_df.empty:
-                            st.success(
-                                "✅ No certificate records "
-                                "require immediate attention."
-                            )
-
-                        else:
-                            st.dataframe(
-                                attention_df,
-                                use_container_width=True,
-                            )
-
-                            st.warning(
-                                f"⚠️ {len(attention_df)} certificate "
-                                "record(s) require attention."
-                            )
-
-
-    # ============================================================
-# 6. BUNKER INTELLIGENCE
+# MARINE OPERATIONS INTELLIGENCE CENTER
+# STABLE UNIVERSAL CSV VERSION
 # ============================================================
 
-if module == "Bunker":
+def marine_csv_engine(
+    module_name,
+    icon,
+    active_vessel,
+    uploader_key,
+):
+    """Universal CSV intelligence engine for Marine Operations."""
 
-    st.subheader("⛽ Bunker Intelligence")
-
-    # ========================================================
-    # ACTIVE VESSEL
-    # ========================================================
-
-    if vessel_name:
-        st.success(f"⚓ ACTIVE VESSEL: {vessel_name.upper()}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-    st.divider()
+    st.markdown(f"## {icon} {module_name}")
+    st.info(f"⚓ ACTIVE VESSEL: {active_vessel}")
 
     # ========================================================
-    # UPLOAD BUNKER CSV
+    # UPLOAD
     # ========================================================
+    st.markdown(f"### 📤 Upload {module_name} CSV")
 
-    st.markdown("### 📤 Upload Bunker CSV")
-
-    bunker_file = st.file_uploader(
-        "Upload Bunker CSV",
+    uploaded_file = st.file_uploader(
+        f"Upload {module_name} CSV",
         type=["csv"],
-        key="bunker_intelligence_csv_final",
+        key=uploader_key,
     )
 
-    if bunker_file is None:
+    if uploaded_file is None:
+        st.info(f"Upload {module_name} CSV to start analysis.")
+        return
 
-        st.info(
-            "Upload Bunker CSV to start Bunker Intelligence analysis."
-        )
-
-    else:
-
+    try:
+        # ====================================================
+        # READ CSV
+        # ====================================================
         try:
-
-            # =================================================
-            # READ CSV
-            # =================================================
-
-            bunker_df = pd.read_csv(bunker_file)
-
-            # Remove completely empty rows and columns
-            bunker_df = bunker_df.dropna(how="all")
-            bunker_df = bunker_df.dropna(axis=1, how="all")
-
-            # Clean column names
-            bunker_df.columns = [
-                str(col).strip()
-                for col in bunker_df.columns
-            ]
-
-            if bunker_df.empty:
-
-                st.warning("⚠️ Bunker CSV contains no records.")
-
-            else:
-
-                st.success(
-                    f"✅ Bunker data loaded — "
-                    f"{len(bunker_df)} records"
-                )
-
-                st.divider()
-
-                # =============================================
-                # BUNKER RECORDS
-                # =============================================
-
-                st.markdown("### 📋 Bunker Records")
-
-                st.dataframe(
-                    bunker_df,
-                    use_container_width=True,
-                )
-
-                st.divider()
-
-                # =============================================
-                # BUNKER FACTS
-                # =============================================
-
-                st.markdown("### 📊 Bunker Facts")
-
-                total_records = len(bunker_df)
-                total_columns = len(bunker_df.columns)
-                empty_cells = int(
-                    bunker_df.isna().sum().sum()
-                )
-
-                b1, b2, b3 = st.columns(3)
-
-                with b1:
-                    st.metric(
-                        "Bunker Records",
-                        total_records,
-                    )
-
-                with b2:
-                    st.metric(
-                        "Data Columns",
-                        total_columns,
-                    )
-
-                with b3:
-                    st.metric(
-                        "Empty Cells",
-                        empty_cells,
-                    )
-
-                st.divider()
-
-                # =============================================
-                # NUMERIC BUNKER ANALYSIS
-                # =============================================
-
-                st.markdown("### ⛽ Bunker Data Analysis")
-
-                numeric_df = bunker_df.select_dtypes(
-                    include="number"
-                )
-
-                if not numeric_df.empty:
-
-                    summary_df = numeric_df.describe().T
-
-                    st.dataframe(
-                        summary_df,
-                        use_container_width=True,
-                    )
-
-                    st.success(
-                        "✅ Numeric bunker data successfully analyzed."
-                    )
-
-                else:
-
-                    st.info(
-                        "No numeric columns detected. "
-                        "Bunker records are still available for analysis."
-                    )
-
-                # =============================================
-                # DATA QUALITY ANALYSIS
-                # =============================================
-
-                st.markdown("### 🔎 Bunker Intelligence Analysis")
-
-                duplicate_records = int(
-                    bunker_df.duplicated().sum()
-                )
-
-                a1, a2, a3 = st.columns(3)
-
-                with a1:
-                    st.metric(
-                        "Total Records",
-                        total_records,
-                    )
-
-                with a2:
-                    st.metric(
-                        "Missing Data",
-                        empty_cells,
-                    )
-
-                with a3:
-                    st.metric(
-                        "Duplicate Records",
-                        duplicate_records,
-                    )
-
-                if empty_cells == 0 and duplicate_records == 0:
-
-                    st.success(
-                        "✅ Bunker dataset passed basic data-quality checks."
-                    )
-
-                else:
-
-                    if empty_cells > 0:
-                        st.warning(
-                            f"⚠️ {empty_cells} empty data cells detected."
-                        )
-
-                    if duplicate_records > 0:
-                        st.warning(
-                            f"⚠️ {duplicate_records} duplicate "
-                            f"record(s) detected."
-                        )
-
-                # =============================================
-                # COLUMN INFORMATION
-                # =============================================
-
-                with st.expander("📑 Bunker CSV Column Information"):
-
-                    column_info = pd.DataFrame(
-                        {
-                            "Column": bunker_df.columns,
-                            "Data Type": [
-                                str(dtype)
-                                for dtype in bunker_df.dtypes
-                            ],
-                            "Missing": [
-                                int(value)
-                                for value in bunker_df.isna().sum()
-                            ],
-                        }
-                    )
-
-                    st.dataframe(
-                        column_info,
-                        use_container_width=True,
-                    )
-
-        except pd.errors.EmptyDataError:
-
-            st.error(
-                "❌ Bunker CSV is empty or contains no readable data."
-            )
-
-        except pd.errors.ParserError as e:
-
-            st.error(
-                f"❌ Bunker CSV format error: {e}"
-            )
-
-        except Exception as e:
-
-            st.error(
-                f"❌ Unable to read Bunker CSV: {e}"
-            )
-
-
-# ============================================================
-# 7. CARGO INTELLIGENCE
-# ============================================================
-elif module == "Cargo":
-
-    st.subheader("📦 Cargo Intelligence")
-
-    # ========================================================
-    # ACTIVE VESSEL
-    # ========================================================
-    if vessel_name:
-        st.success(f"⚓ ACTIVE VESSEL: {vessel_name.upper()}")
-    else:
-        st.warning("⚠️ Enter a vessel name in GLOBAL VESSEL CONTROL.")
-
-    st.divider()
-
-    # ========================================================
-    # UPLOAD CARGO CSV
-    # ========================================================
-    st.markdown("### 📤 Upload Cargo CSV")
-
-    cargo_file = st.file_uploader(
-        "Upload Cargo CSV",
-        type=["csv"],
-        key="cargo_intelligence_csv_final",
-    )
-
-    if cargo_file is None:
-        st.info("Upload Cargo CSV to start Cargo Intelligence analysis.")
-
-    else:
-        try:
-            # ====================================================
-            # READ CSV
-            # ====================================================
-            cargo_df = pd.read_csv(cargo_file)
-
-            if cargo_df.empty:
-                st.warning("⚠️ Cargo CSV contains no data.")
-
-            else:
-                # Clean column names
-                cargo_df.columns = [
-                    str(col).strip()
-                    for col in cargo_df.columns
-                ]
-
-                # Remove completely empty rows
-                cargo_df = cargo_df.dropna(how="all").reset_index(drop=True)
-
-                total_records = len(cargo_df)
-                total_columns = len(cargo_df.columns)
-                empty_cells = int(cargo_df.isna().sum().sum())
-                duplicate_records = int(cargo_df.duplicated().sum())
-
-                st.success(
-                    f"✅ Cargo data loaded — {total_records} records"
-                )
-
-                # ====================================================
-                # CARGO RECORDS
-                # ====================================================
-                st.markdown("### 📋 Cargo Records")
-
-                st.dataframe(
-                    cargo_df,
-                    use_container_width=True,
-                )
-
-                st.divider()
-
-                # ====================================================
-                # CARGO FACTS
-                # ====================================================
-                st.markdown("### 📊 Cargo Facts")
-
-                fact1, fact2, fact3, fact4 = st.columns(4)
-
-                fact1.metric(
-                    "Cargo Records",
-                    total_records,
-                )
-
-                fact2.metric(
-                    "Data Columns",
-                    total_columns,
-                )
-
-                fact3.metric(
-                    "Empty Cells",
-                    empty_cells,
-                )
-
-                fact4.metric(
-                    "Duplicate Records",
-                    duplicate_records,
-                )
-
-                st.divider()
-
-                # ====================================================
-                # CARGO DATA ANALYSIS
-                # ====================================================
-                st.markdown("### 📦 Cargo Data Analysis")
-
-                numeric_df = cargo_df.select_dtypes(
-                    include="number"
-                )
-
-                if not numeric_df.empty:
-
-                    cargo_statistics = numeric_df.describe().T
-
-                    st.dataframe(
-                        cargo_statistics,
-                        use_container_width=True,
-                    )
-
-                    st.success(
-                        "✅ Numeric cargo data successfully analyzed."
-                    )
-
-                else:
-                    st.info(
-                        "ℹ️ No numeric cargo columns detected."
-                    )
-
-                st.divider()
-
-                # ====================================================
-                # CARGO INTELLIGENCE ANALYSIS
-                # ====================================================
-                st.markdown("### 🔎 Cargo Intelligence Analysis")
-
-                ai1, ai2, ai3 = st.columns(3)
-
-                ai1.metric(
-                    "Total Records",
-                    total_records,
-                )
-
-                ai2.metric(
-                    "Missing Data",
-                    empty_cells,
-                )
-
-                ai3.metric(
-                    "Duplicate Records",
-                    duplicate_records,
-                )
-
-                # ====================================================
-                # ACTIVE VESSEL CHECK
-                # ====================================================
-                vessel_column = None
-
-                possible_vessel_columns = [
-                    "vessel",
-                    "vessel name",
-                    "vessel_name",
-                    "ship",
-                    "ship name",
-                    "ship_name",
-                ]
-
-                for col in cargo_df.columns:
-                    if str(col).strip().lower() in possible_vessel_columns:
-                        vessel_column = col
-                        break
-
-                if vessel_column is not None and vessel_name:
-
-                    active_vessel = str(vessel_name).strip().upper()
-
-                    vessel_series = (
-                        cargo_df[vessel_column]
-                        .fillna("")
-                        .astype(str)
-                        .str.strip()
-                        .str.upper()
-                    )
-
-                    vessel_matches = int(
-                        (vessel_series == active_vessel).sum()
-                    )
-
-                    if vessel_matches > 0:
-                        st.success(
-                            f"⚓ {vessel_matches} cargo record(s) "
-                            f"found for ACTIVE VESSEL: {active_vessel}"
-                        )
-                    else:
-                        st.warning(
-                            f"⚠️ No exact cargo records found for "
-                            f"ACTIVE VESSEL: {active_vessel}"
-                        )
-
-                elif vessel_column is None:
-                    st.info(
-                        "ℹ️ Vessel column was not detected automatically."
-                    )
-
-                # ====================================================
-                # DATA QUALITY INTELLIGENCE
-                # ====================================================
-                if empty_cells == 0:
-                    st.success(
-                        "✅ Cargo dataset passed basic data quality check."
-                    )
-                else:
-                    st.warning(
-                        f"⚠️ Cargo dataset contains "
-                        f"{empty_cells} empty cell(s)."
-                    )
-
-                if duplicate_records > 0:
-                    st.warning(
-                        f"⚠️ {duplicate_records} duplicate cargo "
-                        f"record(s) detected."
-                    )
-                else:
-                    st.success(
-                        "✅ No duplicate cargo records detected."
-                    )
-
-                # ====================================================
-                # CARGO QUANTITY / WEIGHT INTELLIGENCE
-                # ====================================================
-                quantity_columns = []
-
-                quantity_keywords = [
-                    "quantity",
-                    "qty",
-                    "weight",
-                    "ton",
-                    "tons",
-                    "tonnage",
-                    "mt",
-                    "volume",
-                ]
-
-                for col in numeric_df.columns:
-                    col_lower = str(col).strip().lower()
-
-                    if any(
-                        keyword in col_lower
-                        for keyword in quantity_keywords
-                    ):
-                        quantity_columns.append(col)
-
-                if quantity_columns:
-
-                    st.markdown("#### ⚖️ Cargo Quantity / Weight Summary")
-
-                    quantity_summary = []
-
-                    for col in quantity_columns:
-
-                        series = pd.to_numeric(
-                            cargo_df[col],
-                            errors="coerce",
-                        )
-
-                        quantity_summary.append(
-                            {
-                                "Column": col,
-                                "Total": series.sum(),
-                                "Average": series.mean(),
-                                "Minimum": series.min(),
-                                "Maximum": series.max(),
-                            }
-                        )
-
-                    quantity_summary_df = pd.DataFrame(
-                        quantity_summary
-                    )
-
-                    st.dataframe(
-                        quantity_summary_df,
-                        use_container_width=True,
-                    )
-
-                # ====================================================
-                # PORT INTELLIGENCE
-                # ====================================================
-                port_columns = []
-
-                for col in cargo_df.columns:
-                    col_lower = str(col).strip().lower()
-
-                    if "port" in col_lower:
-                        port_columns.append(col)
-
-                if port_columns:
-
-                    st.markdown("#### ⚓ Cargo Port Intelligence")
-
-                    for col in port_columns:
-
-                        unique_ports = (
-                            cargo_df[col]
-                            .dropna()
-                            .astype(str)
-                            .str.strip()
-                        )
-
-                        unique_ports = unique_ports[
-                            unique_ports != ""
-                        ].unique()
-
-                        if len(unique_ports) > 0:
-                            st.write(
-                                f"**{col}:** "
-                                + ", ".join(
-                                    map(str, unique_ports)
-                                )
-                            )
-
-                # ====================================================
-                # CARGO TYPE INTELLIGENCE
-                # ====================================================
-                cargo_type_column = None
-
-                possible_cargo_type_columns = [
-                    "cargo type",
-                    "cargo_type",
-                    "commodity",
-                    "commodity type",
-                    "product",
-                    "product type",
-                ]
-
-                for col in cargo_df.columns:
-                    if (
-                        str(col).strip().lower()
-                        in possible_cargo_type_columns
-                    ):
-                        cargo_type_column = col
-                        break
-
-                if cargo_type_column is not None:
-
-                    st.markdown("#### 📦 Cargo Type Intelligence")
-
-                    cargo_types = (
-                        cargo_df[cargo_type_column]
-                        .dropna()
-                        .astype(str)
-                        .str.strip()
-                    )
-
-                    cargo_types = cargo_types[
-                        cargo_types != ""
-                    ].value_counts()
-
-                    if not cargo_types.empty:
-
-                        cargo_type_df = cargo_types.reset_index()
-                        cargo_type_df.columns = [
-                            "Cargo Type",
-                            "Records",
-                        ]
-
-                        st.dataframe(
-                            cargo_type_df,
-                            use_container_width=True,
-                        )
-
-                st.divider()
-
-                # ====================================================
-                # CARGO CSV COLUMN INFORMATION
-                # ====================================================
-                st.markdown("### 🧾 Cargo CSV Column Information")
-
-                column_information = []
-
-                for col in cargo_df.columns:
-
-                    column_information.append(
-                        {
-                            "Column": str(col),
-                            "Data Type": str(cargo_df[col].dtype),
-                            "Non-Empty": int(
-                                cargo_df[col].notna().sum()
-                            ),
-                            "Empty": int(
-                                cargo_df[col].isna().sum()
-                            ),
-                            "Unique Values": int(
-                                cargo_df[col].nunique(
-                                    dropna=True
-                                )
-                            ),
-                        }
-                    )
-
-                column_information_df = pd.DataFrame(
-                    column_information
-                )
-
-                st.dataframe(
-                    column_information_df,
-                    use_container_width=True,
-                )
-
-                st.divider()
-
-                # ====================================================
-                # COMPLETED
-                # ====================================================
-                st.success(
-                    "✅ Cargo Intelligence analysis completed successfully."
-                )
-
-        except pd.errors.EmptyDataError:
-            st.error(
-                "❌ Cargo CSV is empty."
-            )
-
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ Cargo CSV format error: {e}"
-            )
+            df = pd.read_csv(uploaded_file)
 
         except UnicodeDecodeError:
-            st.error(
-                "❌ Cargo CSV encoding could not be read. "
-                "Please save the file as UTF-8 CSV."
+            uploaded_file.seek(0)
+            df = pd.read_csv(uploaded_file, encoding="latin-1")
+
+        if df.empty:
+            st.warning("⚠️ CSV contains no records.")
+            return
+
+        # Clean column names
+        df.columns = [
+            str(column).strip()
+            for column in df.columns
+        ]
+
+        st.success(
+            f"✅ {module_name} data loaded — {len(df)} records"
+        )
+
+        # ====================================================
+        # RECORDS
+        # ====================================================
+        st.markdown(f"### 📋 {module_name} Records")
+
+        st.dataframe(
+            df,
+            use_container_width=True,
+        )
+
+        # ====================================================
+        # FACTS
+        # ====================================================
+        st.markdown(f"### 📊 {module_name} Facts")
+
+        total_records = len(df)
+        total_columns = len(df.columns)
+        missing_cells = int(df.isna().sum().sum())
+        duplicate_records = int(df.duplicated().sum())
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        c1.metric(
+            "Records",
+            total_records,
+        )
+
+        c2.metric(
+            "Data Columns",
+            total_columns,
+        )
+
+        c3.metric(
+            "Empty Cells",
+            missing_cells,
+        )
+
+        c4.metric(
+            "Duplicates",
+            duplicate_records,
+        )
+
+        # ====================================================
+        # DATA ANALYSIS
+        # ====================================================
+        st.markdown(f"### {icon} {module_name} Data Analysis")
+
+        numeric_df = df.select_dtypes(include="number")
+
+        if not numeric_df.empty:
+            analysis_df = (
+                numeric_df
+                .describe()
+                .transpose()
             )
-
-        except Exception as e:
-            st.error(
-                f"❌ Unable to analyze Cargo CSV: {e}"
-            )
-
-# ============================================================
-# 8. AUDIT & FINDINGS
-# ============================================================
-elif module == "Audit & Findings":
-
-    st.subheader("🔎 Audit & Findings")
-
-    audit_file = st.file_uploader(
-        "Upload Audit & Findings CSV",
-        type=["csv"],
-        key="audit_csv"
-    )
-
-    if audit_file is not None:
-        try:
-            audit_df = pd.read_csv(audit_file)
-
-            st.success(
-                f"✅ Audit data loaded — {len(audit_df)} records"
-            )
-
-            st.markdown("### 📋 Audit & Findings Records")
 
             st.dataframe(
-                audit_df,
-                use_container_width=True
+                analysis_df,
+                use_container_width=True,
             )
-
-            st.markdown("### 📊 Audit & Findings Facts")
-
-            total_records = len(audit_df)
-            total_columns = len(audit_df.columns)
-            empty_cells = int(audit_df.isna().sum().sum())
-
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                st.metric(
-                    "Audit / Finding Records",
-                    total_records
-                )
-
-            with col2:
-                st.metric(
-                    "Data Columns",
-                    total_columns
-                )
-
-            with col3:
-                st.metric(
-                    "Empty Cells",
-                    empty_cells
-                )
-
-            st.markdown("### 🔎 Audit & Findings Analysis")
-
-            duplicate_records = int(audit_df.duplicated().sum())
-
-            a1, a2, a3 = st.columns(3)
-
-            with a1:
-                st.metric(
-                    "Total Records",
-                    total_records
-                )
-
-            with a2:
-                st.metric(
-                    "Missing Data",
-                    empty_cells
-                )
-
-            with a3:
-                st.metric(
-                    "Duplicate Records",
-                    duplicate_records
-                )
 
             st.success(
-                "✅ Audit & Findings analysis completed successfully."
+                "✅ Numeric operational data successfully analyzed."
             )
 
-            with st.expander("🧾 Audit CSV Column Information"):
-                column_info = pd.DataFrame({
-                    "Column": audit_df.columns,
-                    "Data Type": [
-                        str(audit_df[col].dtype)
-                        for col in audit_df.columns
-                    ],
-                    "Missing": [
-                        int(audit_df[col].isna().sum())
-                        for col in audit_df.columns
-                    ]
-                })
-
-                st.dataframe(
-                    column_info,
-                    use_container_width=True
-                )
-
-        except pd.errors.EmptyDataError:
-            st.error("❌ Audit CSV is empty.")
-
-        except pd.errors.ParserError as e:
-            st.error(
-                f"❌ Audit CSV format error: {e}"
+        else:
+            st.info(
+                "ℹ️ No numeric columns detected. "
+                "Text data remains available for analysis."
             )
 
-        except Exception as e:
-            st.error(
-                f"❌ Unable to analyze Audit CSV: {e}"
-            )
-
-    else:
-        st.info(
-            "Upload Audit & Findings CSV to start analysis."
+        # ====================================================
+        # INTELLIGENCE ANALYSIS
+        # ====================================================
+        st.markdown(
+            f"### 🔎 {module_name} Intelligence Analysis"
         )
 
-    # ==========================================================
-    # 9. ACTION TRACKER
-    # ==========================================================
-    elif module == "Action Tracker":
+        a1, a2, a3 = st.columns(3)
 
-        st.subheader("✅ Action Tracker")
-
-        action_file = st.file_uploader(
-            "Upload Action Tracker CSV",
-            type=["csv"],
-            key="action_tracker_csv",
+        a1.metric(
+            "Total Records",
+            total_records,
         )
 
-        if action_file is not None:
-            try:
-                action_df = pd.read_csv(action_file)
+        a2.metric(
+            "Missing Data",
+            missing_cells,
+        )
 
+        a3.metric(
+            "Duplicate Records",
+            duplicate_records,
+        )
+
+        # ====================================================
+        # DATA QUALITY
+        # ====================================================
+        if missing_cells == 0:
+            st.success(
+                "✅ Dataset passed missing-data quality check."
+            )
+        else:
+            st.warning(
+                f"⚠️ Dataset contains {missing_cells} empty cells."
+            )
+
+        if duplicate_records == 0:
+            st.success(
+                "✅ No duplicate records detected."
+            )
+        else:
+            st.warning(
+                f"⚠️ {duplicate_records} duplicate records detected."
+            )
+
+        # ====================================================
+        # ACTIVE VESSEL DETECTION
+        # ====================================================
+        vessel_aliases = {
+            "vessel",
+            "vessel name",
+            "vessel_name",
+            "ship",
+            "ship name",
+            "ship_name",
+        }
+
+        vessel_column = None
+
+        for column in df.columns:
+            normalized = str(column).strip().lower()
+
+            if normalized in vessel_aliases:
+                vessel_column = column
+                break
+
+        if vessel_column is not None:
+
+            vessel_values = (
+                df[vessel_column]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+
+            matching_records = int(
+                (vessel_values == active_vessel).sum()
+            )
+
+            st.metric(
+                "Active Vessel Records",
+                matching_records,
+            )
+
+            if matching_records > 0:
                 st.success(
-                    f"✅ Action Tracker loaded — {len(action_df)} records"
+                    f"✅ {matching_records} records belong to "
+                    f"{active_vessel}."
+                )
+            else:
+                st.warning(
+                    f"⚠️ No exact vessel record matches "
+                    f"{active_vessel}."
                 )
 
+        else:
+            st.info(
+                "ℹ️ Vessel column was not detected. "
+                "General dataset analysis remains active."
+            )
+
+        # ====================================================
+        # STATUS / PRIORITY / RISK DETECTION
+        # ====================================================
+        status_keywords = [
+            "status",
+            "condition",
+            "priority",
+            "risk",
+            "remark",
+            "finding",
+            "action",
+        ]
+
+        detected_status_columns = []
+
+        for column in df.columns:
+
+            column_lower = str(column).lower()
+
+            if any(
+                keyword in column_lower
+                for keyword in status_keywords
+            ):
+                detected_status_columns.append(column)
+
+        if detected_status_columns:
+
+            st.markdown("#### ⚠️ Operational Status Analysis")
+
+            for column in detected_status_columns:
+
+                counts = (
+                    df[column]
+                    .fillna("EMPTY")
+                    .astype(str)
+                    .value_counts()
+                    .reset_index()
+                )
+
+                counts.columns = [
+                    column,
+                    "Records",
+                ]
+
+                st.write(f"**{column}**")
+
                 st.dataframe(
-                    action_df,
+                    counts,
                     use_container_width=True,
                 )
 
-                st.metric(
-                    "ACTION RECORDS",
-                    len(action_df),
-                )
-
-            except Exception as e:
-                st.error(f"Unable to read Action Tracker CSV: {e}")
-        else:
-            st.info("Upload Action Tracker CSV to start tracking.")
-
-    # ==========================================================
-    # 10. MARINE AI CO-PILOT
-    # ==========================================================
-    elif module == "Marine AI Co-Pilot":
-
-        st.subheader("🤖 Marine AI Co-Pilot")
-
-        if vessel_name:
-            st.success(
-                f"AI operational workspace ready for "
-                f"{vessel_name.upper()}."
-            )
-        else:
-            st.info(
-                "Enter Vessel Name in GLOBAL VESSEL CONTROL "
-                "before starting vessel-specific analysis."
-            )
-
-        marine_question = st.text_area(
-            "Marine Operations Question / Instruction",
-            placeholder=(
-                "Example: Analyze voyage, maintenance, defects, "
-                "certificates, bunker or cargo condition..."
-            ),
-            key="marine_ai_question",
+        # ====================================================
+        # CSV COLUMN INFORMATION
+        # ====================================================
+        st.markdown(
+            f"### 🧾 {module_name} CSV Column Information"
         )
 
-        if st.button(
-            "⚓ Analyze Marine Operations",
-            key="marine_ai_analyze",
-        ):
-            if marine_question.strip():
-                st.info(
-                    "Marine AI request received. "
-                    "AI engine connection will process this workspace."
-                )
-            else:
-                st.warning("Enter a question or instruction first.")
+        column_rows = []
+
+        for column in df.columns:
+
+            column_rows.append(
+                {
+                    "Column": column,
+                    "Data Type": str(df[column].dtype),
+                    "Non Empty": int(df[column].notna().sum()),
+                    "Missing": int(df[column].isna().sum()),
+                    "Unique Values": int(
+                        df[column].nunique(dropna=True)
+                    ),
+                }
+            )
+
+        column_info = pd.DataFrame(column_rows)
+
+        st.dataframe(
+            column_info,
+            use_container_width=True,
+        )
+
+        # ====================================================
+        # COMPLETED
+        # ====================================================
+        st.success(
+            f"✅ {module_name} analysis completed successfully."
+        )
+
+    except pd.errors.EmptyDataError:
+        st.error("❌ CSV file is empty.")
+
+    except pd.errors.ParserError as error:
+        st.error(f"❌ CSV format error: {error}")
+
+    except Exception as error:
+        st.error(
+            f"❌ Unable to analyze {module_name}: {error}"
+        )
+
+
+# ============================================================
+# MARINE OPERATIONS PAGE
+# ============================================================
+
+st.markdown("# ⚓ Marine Operations Intelligence")
+
+# vessel_name already exists in the main application
+marine_active_vessel = str(vessel_name).strip().upper()
+
+if not marine_active_vessel:
+    marine_active_vessel = "NOT SELECTED"
+
+st.info(
+    f"⚓ ACTIVE VESSEL: {marine_active_vessel}"
+)
+
+# ============================================================
+# MENU
+# ============================================================
+
+marine_module = st.selectbox(
+    "Select Marine Operations Module",
+    [
+        "Vessel Operations",
+        "Voyage Intelligence",
+        "PMS / Maintenance",
+        "Defects",
+        "Certificates",
+        "Bunker",
+        "Cargo",
+        "Audit & Findings",
+        "Action Tracker",
+        "Marine MLC / Crew",
+    ],
+    key="marine_operations_selector_v2",
+)
+
+# ============================================================
+# MODULE CONFIGURATION
+# ============================================================
+
+MARINE_MODULES = {
+
+    "Vessel Operations": {
+        "icon": "⚓",
+        "key": "marine_vessel_operations_csv_v2",
+    },
+
+    "Voyage Intelligence": {
+        "icon": "🚢",
+        "key": "marine_voyage_csv_v2",
+    },
+
+    "PMS / Maintenance": {
+        "icon": "🔧",
+        "key": "marine_pms_csv_v2",
+    },
+
+    "Defects": {
+        "icon": "⚠️",
+        "key": "marine_defects_csv_v2",
+    },
+
+    "Certificates": {
+        "icon": "📜",
+        "key": "marine_certificates_csv_v2",
+    },
+
+    "Bunker": {
+        "icon": "⛽",
+        "key": "marine_bunker_csv_v2",
+    },
+
+    "Cargo": {
+        "icon": "📦",
+        "key": "marine_cargo_csv_v2",
+    },
+
+    "Audit & Findings": {
+        "icon": "🔎",
+        "key": "marine_audit_csv_v2",
+    },
+
+    "Action Tracker": {
+        "icon": "✅",
+        "key": "marine_action_tracker_csv_v2",
+    },
+
+    "Marine MLC / Crew": {
+        "icon": "👥",
+        "key": "marine_mlc_crew_csv_v2",
+    },
+}
+
+selected_module = MARINE_MODULES[marine_module]
+
+marine_csv_engine(
+    module_name=marine_module,
+    icon=selected_module["icon"],
+    active_vessel=marine_active_vessel,
+    uploader_key=selected_module["key"],
+)
 
 # ============================================================
 # FUEL EFFICIENCY
@@ -2135,30 +853,7 @@ elif page == "Fuel Efficiency BBM":
                 "cp1252",
                 "latin1",
             ):
-                try:
-                    decoded_text = raw_data.decode(encoding)
-                    detected_encoding = encoding
-                    break
-                except UnicodeDecodeError:
-                    continue
 
-            if decoded_text is None:
-                raise ValueError("Encoding CSV tidak dapat dikenali.")
-
-            # ----------------------------------------------------
-            # AUTO DETECT DELIMITER
-            # comma / semicolon / tab / pipe
-            # ----------------------------------------------------
-            sample = decoded_text[:10000]
-
-            try:
-                dialect = csv.Sniffer().sniff(
-                    sample,
-                    delimiters=",;\t|",
-                )
-                detected_separator = dialect.delimiter
-            except csv.Error:
-                detected_separator = ","
 
             # ----------------------------------------------------
             # READ DPR - UNLIMITED / DYNAMIC COLUMNS
