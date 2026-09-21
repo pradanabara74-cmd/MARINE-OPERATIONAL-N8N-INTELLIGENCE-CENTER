@@ -1048,9 +1048,10 @@ elif page == "Fuel Efficiency BBM":
             if not raw_data:
                 raise ValueError("File CSV kosong.")
 
-            # ----------------------------------------------------
+            # -----------------------------------------------
             # AUTO DETECT ENCODING
-            # ----------------------------------------------------
+            # -----------------------------------------------
+
             decoded_text = None
             detected_encoding = None
 
@@ -1060,17 +1061,44 @@ elif page == "Fuel Efficiency BBM":
                 "cp1252",
                 "latin1",
             ):
+                try:
+                    decoded_text = raw_data.decode(encoding)
+                    detected_encoding = encoding
+                    break
+                except UnicodeDecodeError:
+                    continue
 
+            if decoded_text is None:
+                raise ValueError(
+                    "Encoding CSV tidak dapat dibaca."
+                )
 
-            # ----------------------------------------------------
-            # READ DPR - UNLIMITED / DYNAMIC COLUMNS
-            # ----------------------------------------------------
+            # -----------------------------------------------
+            # AUTO DETECT CSV SEPARATOR
+            # -----------------------------------------------
+
+            try:
+                dialect = csv.Sniffer().sniff(
+                    decoded_text[:5000],
+                    delimiters=",;\t|"
+                )
+                separator = dialect.delimiter
+            except csv.Error:
+                separator = ","
+
+            # -----------------------------------------------
+            # READ CSV
+            # -----------------------------------------------
+
             df = pd.read_csv(
                 io.StringIO(decoded_text),
-                sep=detected_separator,
-                engine="python",
+                sep=separator
             )
 
+            if df.empty:
+                raise ValueError(
+                    "CSV tidak memiliki data."
+                )
             # ----------------------------------------------------
             # CLEAN COLUMN NAMES
             # ----------------------------------------------------
