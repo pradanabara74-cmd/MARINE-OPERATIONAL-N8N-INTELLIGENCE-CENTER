@@ -1902,7 +1902,7 @@ elif module == "Audit & Findings":
     audit_file = st.file_uploader(
         "Upload Audit & Findings CSV",
         type=["csv"],
-        key="audit_csv",
+        key="audit_csv"
     )
 
     if audit_file is not None:
@@ -1913,20 +1913,102 @@ elif module == "Audit & Findings":
                 f"✅ Audit data loaded — {len(audit_df)} records"
             )
 
+            st.markdown("### 📋 Audit & Findings Records")
+
             st.dataframe(
                 audit_df,
-                use_container_width=True,
+                use_container_width=True
             )
 
+            st.markdown("### 📊 Audit & Findings Facts")
+
+            total_records = len(audit_df)
+            total_columns = len(audit_df.columns)
+            empty_cells = int(audit_df.isna().sum().sum())
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
                 st.metric(
-                    "AUDIT / FINDING RECORDS",
-                    len(audit_df),
+                    "Audit / Finding Records",
+                    total_records
                 )
 
-            except Exception as e:
-                st.error(f"Unable to read Audit CSV: {e}")
-        else:
-            st.info("Upload Audit CSV to start analysis.")
+            with col2:
+                st.metric(
+                    "Data Columns",
+                    total_columns
+                )
+
+            with col3:
+                st.metric(
+                    "Empty Cells",
+                    empty_cells
+                )
+
+            st.markdown("### 🔎 Audit & Findings Analysis")
+
+            duplicate_records = int(audit_df.duplicated().sum())
+
+            a1, a2, a3 = st.columns(3)
+
+            with a1:
+                st.metric(
+                    "Total Records",
+                    total_records
+                )
+
+            with a2:
+                st.metric(
+                    "Missing Data",
+                    empty_cells
+                )
+
+            with a3:
+                st.metric(
+                    "Duplicate Records",
+                    duplicate_records
+                )
+
+            st.success(
+                "✅ Audit & Findings analysis completed successfully."
+            )
+
+            with st.expander("🧾 Audit CSV Column Information"):
+                column_info = pd.DataFrame({
+                    "Column": audit_df.columns,
+                    "Data Type": [
+                        str(audit_df[col].dtype)
+                        for col in audit_df.columns
+                    ],
+                    "Missing": [
+                        int(audit_df[col].isna().sum())
+                        for col in audit_df.columns
+                    ]
+                })
+
+                st.dataframe(
+                    column_info,
+                    use_container_width=True
+                )
+
+        except pd.errors.EmptyDataError:
+            st.error("❌ Audit CSV is empty.")
+
+        except pd.errors.ParserError as e:
+            st.error(
+                f"❌ Audit CSV format error: {e}"
+            )
+
+        except Exception as e:
+            st.error(
+                f"❌ Unable to analyze Audit CSV: {e}"
+            )
+
+    else:
+        st.info(
+            "Upload Audit & Findings CSV to start analysis."
+        )
 
     # ==========================================================
     # 9. ACTION TRACKER
