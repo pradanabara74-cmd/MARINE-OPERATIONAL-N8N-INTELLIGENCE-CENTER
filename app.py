@@ -1480,82 +1480,85 @@ elif module == "Cargo":
     cargo_file = st.file_uploader(
         "Upload Cargo CSV",
         type=["csv"],
-        key="cargo_csv_final"
+        key="cargo_intelligence_csv_final",
     )
 
     if cargo_file is None:
-
         st.info("Upload Cargo CSV to start Cargo Intelligence analysis.")
 
     else:
-
         try:
-            # ==================================================
-            # READ AND CLEAN CSV
-            # ==================================================
+            # ====================================================
+            # READ CSV
+            # ====================================================
             cargo_df = pd.read_csv(cargo_file)
 
-            cargo_df = cargo_df.dropna(how="all")
-            cargo_df = cargo_df.dropna(axis=1, how="all")
-            cargo_df.columns = cargo_df.columns.astype(str).str.strip()
-            cargo_df = cargo_df.reset_index(drop=True)
-
             if cargo_df.empty:
-
-                st.warning("⚠️ Cargo CSV contains no usable records.")
+                st.warning("⚠️ Cargo CSV contains no data.")
 
             else:
+                # Clean column names
+                cargo_df.columns = [
+                    str(col).strip()
+                    for col in cargo_df.columns
+                ]
 
-                st.success(
-                    f"✅ Cargo data loaded — {len(cargo_df)} records"
-                )
-
-                # ==============================================
-                # CARGO RECORDS
-                # ==============================================
-                st.markdown("### 📋 Cargo Records")
-
-                st.dataframe(
-                    cargo_df,
-                    use_container_width=True,
-                    hide_index=True
-                )
-
-                # ==============================================
-                # CARGO FACTS
-                # ==============================================
-                st.markdown("### 📊 Cargo Facts")
+                # Remove completely empty rows
+                cargo_df = cargo_df.dropna(how="all").reset_index(drop=True)
 
                 total_records = len(cargo_df)
                 total_columns = len(cargo_df.columns)
                 empty_cells = int(cargo_df.isna().sum().sum())
                 duplicate_records = int(cargo_df.duplicated().sum())
 
-                c1, c2, c3, c4 = st.columns(4)
+                st.success(
+                    f"✅ Cargo data loaded — {total_records} records"
+                )
 
-                c1.metric(
+                # ====================================================
+                # CARGO RECORDS
+                # ====================================================
+                st.markdown("### 📋 Cargo Records")
+
+                st.dataframe(
+                    cargo_df,
+                    use_container_width=True,
+                )
+
+                st.divider()
+
+                # ====================================================
+                # CARGO FACTS
+                # ====================================================
+                st.markdown("### 📊 Cargo Facts")
+
+                fact1, fact2, fact3, fact4 = st.columns(4)
+
+                fact1.metric(
                     "Cargo Records",
-                    total_records
+                    total_records,
                 )
 
-                c2.metric(
+                fact2.metric(
                     "Data Columns",
-                    total_columns
+                    total_columns,
                 )
 
-                c3.metric(
+                fact3.metric(
                     "Empty Cells",
-                    empty_cells
+                    empty_cells,
                 )
 
-                c4.metric(
+                fact4.metric(
                     "Duplicate Records",
-                    duplicate_records
+                    duplicate_records,
                 )
 
-                # ==============================================
+                st.divider()
+
+                # ====================================================
                 # CARGO DATA ANALYSIS
-                # ==============================================
+                # ====================================================
                 st.markdown("### 📦 Cargo Data Analysis")
 
                 numeric_df = cargo_df.select_dtypes(
@@ -1564,11 +1567,11 @@ elif module == "Cargo":
 
                 if not numeric_df.empty:
 
-                    cargo_analysis = numeric_df.describe().transpose()
+                    cargo_statistics = numeric_df.describe().T
 
                     st.dataframe(
-                        cargo_analysis,
-                        use_container_width=True
+                        cargo_statistics,
+                        use_container_width=True,
                     )
 
                     st.success(
@@ -1576,297 +1579,325 @@ elif module == "Cargo":
                     )
 
                 else:
-
                     st.info(
                         "ℹ️ No numeric cargo columns detected."
                     )
 
-                # ==============================================
+                st.divider()
+
+                # ====================================================
                 # CARGO INTELLIGENCE ANALYSIS
-                # ==============================================
+                # ====================================================
                 st.markdown("### 🔎 Cargo Intelligence Analysis")
 
-                a1, a2, a3 = st.columns(3)
+                ai1, ai2, ai3 = st.columns(3)
 
-                a1.metric(
+                ai1.metric(
                     "Total Records",
-                    total_records
+                    total_records,
                 )
 
-                a2.metric(
+                ai2.metric(
                     "Missing Data",
-                    empty_cells
+                    empty_cells,
                 )
 
-                a3.metric(
+                ai3.metric(
                     "Duplicate Records",
-                    duplicate_records
+                    duplicate_records,
                 )
 
-                # ==============================================
+                # ====================================================
                 # ACTIVE VESSEL CHECK
-                # ==============================================
+                # ====================================================
                 vessel_column = None
 
-                for col in cargo_df.columns:
+                possible_vessel_columns = [
+                    "vessel",
+                    "vessel name",
+                    "vessel_name",
+                    "ship",
+                    "ship name",
+                    "ship_name",
+                ]
 
-                    if col.strip().lower() in [
-                        "vessel",
-                        "vessel name",
-                        "ship",
-                        "ship name"
-                    ]:
+                for col in cargo_df.columns:
+                    if str(col).strip().lower() in possible_vessel_columns:
                         vessel_column = col
                         break
 
-                if vessel_column is not None:
+                if vessel_column is not None and vessel_name:
 
-                    vessels_found = (
+                    active_vessel = str(vessel_name).strip().upper()
+
+                    vessel_series = (
                         cargo_df[vessel_column]
-                        .dropna()
+                        .fillna("")
                         .astype(str)
                         .str.strip()
                         .str.upper()
                     )
 
-                    if vessel_name:
+                    vessel_matches = int(
+                        (vessel_series == active_vessel).sum()
+                    )
 
-                        active_vessel = vessel_name.strip().upper()
-
-                        vessel_matches = int(
-                            (vessels_found == active_vessel).sum()
+                    if vessel_matches > 0:
+                        st.success(
+                            f"⚓ {vessel_matches} cargo record(s) "
+                            f"found for ACTIVE VESSEL: {active_vessel}"
+                        )
+                    else:
+                        st.warning(
+                            f"⚠️ No exact cargo records found for "
+                            f"ACTIVE VESSEL: {active_vessel}"
                         )
 
-                        if vessel_matches > 0:
+                elif vessel_column is None:
+                    st.info(
+                        "ℹ️ Vessel column was not detected automatically."
+                    )
 
-                            st.success(
-                                f"✅ {vessel_matches} cargo record(s) "
-                                f"match ACTIVE VESSEL {active_vessel}."
-                            )
+                # ====================================================
+                # DATA QUALITY INTELLIGENCE
+                # ====================================================
+                if empty_cells == 0:
+                    st.success(
+                        "✅ Cargo dataset passed basic data quality check."
+                    )
+                else:
+                    st.warning(
+                        f"⚠️ Cargo dataset contains "
+                        f"{empty_cells} empty cell(s)."
+                    )
 
-                        else:
+                if duplicate_records > 0:
+                    st.warning(
+                        f"⚠️ {duplicate_records} duplicate cargo "
+                        f"record(s) detected."
+                    )
+                else:
+                    st.success(
+                        "✅ No duplicate cargo records detected."
+                    )
 
-                            st.warning(
-                                f"⚠️ No cargo records match "
-                                f"ACTIVE VESSEL {active_vessel}."
-                            )
+                # ====================================================
+                # CARGO QUANTITY / WEIGHT INTELLIGENCE
+                # ====================================================
+                quantity_columns = []
 
-                # ==============================================
-                # CARGO QUANTITY
-                # ==============================================
-                quantity_column = None
-
-                quantity_names = [
-                    "cargo quantity",
+                quantity_keywords = [
                     "quantity",
-                    "cargo qty",
-                    "quantity mt",
-                    "cargo mt",
-                    "weight mt",
+                    "qty",
                     "weight",
-                    "metric tons",
-                    "mt"
+                    "ton",
+                    "tons",
+                    "tonnage",
+                    "mt",
+                    "volume",
+                ]
+
+                for col in numeric_df.columns:
+                    col_lower = str(col).strip().lower()
+
+                    if any(
+                        keyword in col_lower
+                        for keyword in quantity_keywords
+                    ):
+                        quantity_columns.append(col)
+
+                if quantity_columns:
+
+                    st.markdown("#### ⚖️ Cargo Quantity / Weight Summary")
+
+                    quantity_summary = []
+
+                    for col in quantity_columns:
+
+                        series = pd.to_numeric(
+                            cargo_df[col],
+                            errors="coerce",
+                        )
+
+                        quantity_summary.append(
+                            {
+                                "Column": col,
+                                "Total": series.sum(),
+                                "Average": series.mean(),
+                                "Minimum": series.min(),
+                                "Maximum": series.max(),
+                            }
+                        )
+
+                    quantity_summary_df = pd.DataFrame(
+                        quantity_summary
+                    )
+
+                    st.dataframe(
+                        quantity_summary_df,
+                        use_container_width=True,
+                    )
+
+                # ====================================================
+                # PORT INTELLIGENCE
+                # ====================================================
+                port_columns = []
+
+                for col in cargo_df.columns:
+                    col_lower = str(col).strip().lower()
+
+                    if "port" in col_lower:
+                        port_columns.append(col)
+
+                if port_columns:
+
+                    st.markdown("#### ⚓ Cargo Port Intelligence")
+
+                    for col in port_columns:
+
+                        unique_ports = (
+                            cargo_df[col]
+                            .dropna()
+                            .astype(str)
+                            .str.strip()
+                        )
+
+                        unique_ports = unique_ports[
+                            unique_ports != ""
+                        ].unique()
+
+                        if len(unique_ports) > 0:
+                            st.write(
+                                f"**{col}:** "
+                                + ", ".join(
+                                    map(str, unique_ports)
+                                )
+                            )
+
+                # ====================================================
+                # CARGO TYPE INTELLIGENCE
+                # ====================================================
+                cargo_type_column = None
+
+                possible_cargo_type_columns = [
+                    "cargo type",
+                    "cargo_type",
+                    "commodity",
+                    "commodity type",
+                    "product",
+                    "product type",
                 ]
 
                 for col in cargo_df.columns:
-
-                    if col.strip().lower() in quantity_names:
-                        quantity_column = col
-                        break
-
-                if quantity_column is not None:
-
-                    quantity_data = pd.to_numeric(
-                        cargo_df[quantity_column],
-                        errors="coerce"
-                    ).dropna()
-
-                    if not quantity_data.empty:
-
-                        st.markdown("#### ⚖️ Cargo Quantity Analysis")
-
-                        q1, q2, q3 = st.columns(3)
-
-                        q1.metric(
-                            "Total Cargo",
-                            f"{quantity_data.sum():,.2f}"
-                        )
-
-                        q2.metric(
-                            "Average Cargo",
-                            f"{quantity_data.mean():,.2f}"
-                        )
-
-                        q3.metric(
-                            "Maximum Cargo",
-                            f"{quantity_data.max():,.2f}"
-                        )
-
-                # ==============================================
-                # CARGO TYPE
-                # ==============================================
-                cargo_type_column = None
-
-                for col in cargo_df.columns:
-
-                    if col.strip().lower() in [
-                        "cargo type",
-                        "cargo",
-                        "commodity",
-                        "commodity type"
-                    ]:
+                    if (
+                        str(col).strip().lower()
+                        in possible_cargo_type_columns
+                    ):
                         cargo_type_column = col
                         break
 
                 if cargo_type_column is not None:
 
-                    st.markdown("#### 📦 Cargo Types")
+                    st.markdown("#### 📦 Cargo Type Intelligence")
 
                     cargo_types = (
                         cargo_df[cargo_type_column]
-                        .fillna("UNKNOWN")
+                        .dropna()
                         .astype(str)
-                        .value_counts()
-                        .rename_axis("Cargo Type")
-                        .reset_index(name="Records")
+                        .str.strip()
                     )
 
-                    st.dataframe(
-                        cargo_types,
-                        use_container_width=True,
-                        hide_index=True
-                    )
+                    cargo_types = cargo_types[
+                        cargo_types != ""
+                    ].value_counts()
 
-                # ==============================================
-                # PORT ANALYSIS
-                # ==============================================
-                loading_column = None
-                discharge_column = None
+                    if not cargo_types.empty:
+
+                        cargo_type_df = cargo_types.reset_index()
+                        cargo_type_df.columns = [
+                            "Cargo Type",
+                            "Records",
+                        ]
+
+                        st.dataframe(
+                            cargo_type_df,
+                            use_container_width=True,
+                        )
+
+                st.divider()
+
+                # ====================================================
+                # CARGO CSV COLUMN INFORMATION
+                # ====================================================
+                st.markdown("### 🧾 Cargo CSV Column Information")
+
+                column_information = []
 
                 for col in cargo_df.columns:
 
-                    col_name = col.strip().lower()
-
-                    if col_name in [
-                        "loading port",
-                        "load port",
-                        "port of loading"
-                    ]:
-                        loading_column = col
-
-                    if col_name in [
-                        "discharge port",
-                        "unloading port",
-                        "port of discharge"
-                    ]:
-                        discharge_column = col
-
-                if (
-                    loading_column is not None
-                    or discharge_column is not None
-                ):
-
-                    st.markdown("#### ⚓ Cargo Port Analysis")
-
-                    p1, p2 = st.columns(2)
-
-                    if loading_column is not None:
-
-                        p1.metric(
-                            "Loading Ports",
-                            cargo_df[loading_column]
-                            .dropna()
-                            .nunique()
-                        )
-
-                    if discharge_column is not None:
-
-                        p2.metric(
-                            "Discharge Ports",
-                            cargo_df[discharge_column]
-                            .dropna()
-                            .nunique()
-                        )
-
-                # ==============================================
-                # DATA QUALITY
-                # ==============================================
-                st.markdown("#### 🛡️ Cargo Data Quality")
-
-                if empty_cells == 0 and duplicate_records == 0:
-
-                    st.success(
-                        "✅ Cargo dataset passed basic data quality checks."
+                    column_information.append(
+                        {
+                            "Column": str(col),
+                            "Data Type": str(cargo_df[col].dtype),
+                            "Non-Empty": int(
+                                cargo_df[col].notna().sum()
+                            ),
+                            "Empty": int(
+                                cargo_df[col].isna().sum()
+                            ),
+                            "Unique Values": int(
+                                cargo_df[col].nunique(
+                                    dropna=True
+                                )
+                            ),
+                        }
                     )
 
-                else:
-
-                    if empty_cells > 0:
-
-                        st.warning(
-                            f"⚠️ {empty_cells} empty cell(s) detected."
-                        )
-
-                    if duplicate_records > 0:
-
-                        st.warning(
-                            f"⚠️ {duplicate_records} duplicate record(s) detected."
-                        )
-
-                # ==============================================
-                # CARGO CSV COLUMN INFORMATION
-                # ==============================================
-                st.markdown("### 🧾 Cargo CSV Column Information")
-
-                column_info = pd.DataFrame({
-                    "Column": cargo_df.columns,
-                    "Data Type": [
-                        str(cargo_df[col].dtype)
-                        for col in cargo_df.columns
-                    ],
-                    "Non-Null": [
-                        int(cargo_df[col].notna().sum())
-                        for col in cargo_df.columns
-                    ],
-                    "Missing": [
-                        int(cargo_df[col].isna().sum())
-                        for col in cargo_df.columns
-                    ],
-                    "Unique Values": [
-                        int(cargo_df[col].nunique(dropna=True))
-                        for col in cargo_df.columns
-                    ]
-                })
-
-                st.dataframe(
-                    column_info,
-                    use_container_width=True,
-                    hide_index=True
+                column_information_df = pd.DataFrame(
+                    column_information
                 )
 
+                st.dataframe(
+                    column_information_df,
+                    use_container_width=True,
+                )
+
+                st.divider()
+
+                # ====================================================
+                # COMPLETED
+                # ====================================================
                 st.success(
                     "✅ Cargo Intelligence analysis completed successfully."
                 )
 
         except pd.errors.EmptyDataError:
-
-            st.error("❌ Cargo CSV is empty.")
+            st.error(
+                "❌ Cargo CSV is empty."
+            )
 
         except pd.errors.ParserError as e:
+            st.error(
+                f"❌ Cargo CSV format error: {e}"
+            )
 
-            st.error(f"❌ Cargo CSV format error: {e}")
+        except UnicodeDecodeError:
+            st.error(
+                "❌ Cargo CSV encoding could not be read. "
+                "Please save the file as UTF-8 CSV."
+            )
 
         except Exception as e:
+            st.error(
+                f"❌ Unable to analyze Cargo CSV: {e}"
+            )
 
-            st.error(f"❌ Unable to analyze Cargo CSV: {e}")
-        
+# ============================================================
+# 8. AUDIT & FINDINGS
+# ============================================================
+elif module == "Audit & Findings":
 
-    # ==========================================================
-    # 8. AUDIT & FINDINGS
-    # ==========================================================
-    elif module == "Audit & Findings":
-
-        st.subheader("🔎 Audit & Findings")
+    st.subheader("🔎 Audit & Findings")
 
         audit_file = st.file_uploader(
             "Upload Audit & Findings CSV",
