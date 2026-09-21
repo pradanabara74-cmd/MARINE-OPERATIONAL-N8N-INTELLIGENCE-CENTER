@@ -66,11 +66,10 @@ with st.sidebar.expander("⛽ BBM/MGO RPM CONTROL", expanded=False):
     # ------------------------------------------------------
 
     active_rpm = st.selectbox(
-        "RPM Aktif",
-        rpm_points,
-        index=0,
-        key="active_rpm",
-    )
+    "RPM Aktif",
+    options=RPM_POINTS,
+    key="active_rpm",
+)
 
     st.markdown(f"### RPM {active_rpm}")
 
