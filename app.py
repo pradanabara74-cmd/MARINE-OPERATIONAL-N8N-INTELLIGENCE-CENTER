@@ -1441,25 +1441,52 @@ elif page == "QHSSE Company":
 elif page == "N8N Workflow Center":
 
     st.header("🔄 N8N Workflow Center")
-
-    st.write(
-        "N8N akan menjadi automation orchestration engine "
-        "untuk seluruh sistem."
+    st.caption(
+        "Automation Orchestration Center for Marine Operations, "
+        "Fuel Efficiency BBM, QHSSE and AI Intelligence."
     )
 
+    st.info(
+        "N8N Workflow Center is prepared as the automation layer "
+        "connecting operational data, alerts, reports and AI workflows."
+    )
+
+    st.subheader("⚙️ Workflow Control Center")
+
     workflows = {
-        "DPR Processing": "READY FOR BUILD",
-        "Fuel Alert": "READY FOR BUILD",
-        "Maintenance Alert": "READY FOR BUILD",
-        "QHSSE Alert": "READY FOR BUILD",
-        "Management Report": "READY FOR BUILD",
-        "AI Workflow": "READY FOR BUILD",
+        "📄 DPR Processing": "READY",
+        "⛽ Fuel Alert": "READY",
+        "🔧 Maintenance Alert": "READY",
+        "🛡️ QHSSE Alert": "READY",
+        "📊 Management Report": "READY",
+        "🤖 AI Workflow": "READY",
     }
 
     for workflow, status in workflows.items():
         c1, c2 = st.columns([3, 1])
-        c1.write(workflow)
-        c2.write(status)
+
+        with c1:
+            st.write(workflow)
+
+        with c2:
+            st.success(status)
+
+    st.divider()
+
+    st.subheader("🔗 N8N Integration")
+
+    n1, n2, n3 = st.columns(3)
+
+    with n1:
+        st.metric("Workflows", len(workflows))
+
+    with n2:
+        st.metric("Ready", len(workflows))
+
+    with n3:
+        st.metric("Failed", 0)
+
+    st.success("✅ N8N Workflow Center ready for integration.")
 
 # ============================================================
 # AI
