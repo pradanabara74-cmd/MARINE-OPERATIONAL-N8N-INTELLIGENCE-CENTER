@@ -1537,7 +1537,7 @@ elif page == "Company Presentation":
 
     st.markdown("---")
     st.subheader("🎬 Video Presentation")
-    video_path = "presentation.mp4"
+    video_path = "VID-20260922-WA0004.mp4"
     if os.path.exists(video_path):
         st.video(video_path)
         st.success("✅ Company presentation video is active.")
